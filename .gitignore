@@ -1,1 +1,3 @@
 *.so
+*.cnoid
+!world/TrampolineSpringModel.cnoid
