@@ -64,7 +64,7 @@ class PDController : public SimpleController
                 }
             }
             // Set Torque Limits
-            else if (option_string_vec[i] == "TorqueLimit") {
+            else if (option_string_vec[i] == "TorqueLimits") {
                 std::ifstream ifs(option_string_vec[++i]);
                 if (ifs.is_open()) {
                     double ulimit;

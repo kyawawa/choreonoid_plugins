@@ -45,7 +45,7 @@ const char** getTargetModelNames()
 {
     char *rname = getenv("CHOREONOID_ROBOT");
     if (rname != NULL) {
-        std::cerr << "CHOREONID_ROBOT =" << rname << std::endl;
+        std::cerr << "[TrampolineCustomizer] CHOREONID_ROBOT =" << rname << std::endl;
     }
     static const char* names[] = {"TrampolineSpringModel", rname, 0};
     return names;
@@ -70,7 +70,7 @@ BodyCustomizerHandle create(BodyHandle bodyHandle, const char* modelName)
             YAML::Node spring = YAML::LoadFile(conf_file);
             customizer->kp = spring["trampoline"]["kp"].as<double>();
             customizer->kd = spring["trampoline"]["kd"].as<double>();
-            std::cerr << "kp is set to " << customizer->kp << " and kd is set to " << customizer->kd << std::endl;
+            std::cerr << "[TrampolineCustomizer] kp is set to " << customizer->kp << " and kd is set to " << customizer->kd << std::endl;
         }
     }
 

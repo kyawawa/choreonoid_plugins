@@ -43,7 +43,7 @@ configure_file(${PROJECT_SOURCE_DIR}/world/SampleRobotTrampoline.cnoid.in ${PROJ
 if(${hrpsys_choreonoid_tutorials_FOUND} AND ${jvrc_models_FOUND})
   set(JVRC_MODELS_DIR ${jvrc_models_SOURCE_PREFIX})
   set(PDGAINS_YAML_FILE ${hrpsys_choreonoid_tutorials_SOURCE_PREFIX}/models/JAXON_JVRC.PDgains_sim.dat)
-  set(TORQUE_LIMIT_FILE ${PROJECT_SOURCE_DIR}/config/JAXONTorqueLimit.dat)
+  set(TORQUE_LIMITS_FILE ${PROJECT_SOURCE_DIR}/config/JAXONTorqueLimits.dat)
   configure_file(${PROJECT_SOURCE_DIR}/world/JAXONFloor.cnoid.in ${PROJECT_SOURCE_DIR}/world/JAXONFloor.cnoid @ONLY)
   configure_file(${PROJECT_SOURCE_DIR}/world/JAXONTrampoline.cnoid.in ${PROJECT_SOURCE_DIR}/world/JAXONTrampoline.cnoid @ONLY)
 else()

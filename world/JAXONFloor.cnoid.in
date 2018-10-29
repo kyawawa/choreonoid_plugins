@@ -77,7 +77,7 @@ items:
               class: SimpleControllerItem
               data:
                 isNoDelayMode: true
-                controllerOptions: "pdgains @PDGAINS_YAML_FILE@ TorqueLimit @TORQUE_LIMIT_FILE@"
+                controllerOptions: "pdgains @PDGAINS_YAML_FILE@ TorqueLimits @TORQUE_LIMITS_FILE@"
                 controller: "@PROJECT_SOURCE_DIR@/PDController.so"
                 baseDirectory: "None"
                 reloading: true
