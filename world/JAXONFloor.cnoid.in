@@ -78,7 +78,7 @@ items:
               data:
                 isNoDelayMode: true
                 controllerOptions: "pdgains @PDGAINS_YAML_FILE@ TorqueLimits @TORQUE_LIMITS_FILE@"
-                controller: "@PROJECT_SOURCE_DIR@/PDController.so"
+                controller: "@PROJECT_SOURCE_DIR@/libCnoidPDController.so"
                 baseDirectory: "None"
                 reloading: true
         -

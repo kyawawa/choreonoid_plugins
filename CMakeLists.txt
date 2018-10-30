@@ -22,20 +22,25 @@ catkin_package(
 include_directories(${cnoid-plugin_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${YAML_CPP_INCLUDEDIR})
 link_directories(${cnoid-plugin_LIBRARY_DIRS} ${catkin_LIBRARY_DIRS})
 
-add_library(TrampolineCustomizer src/TrampolineCustomizer.cpp)
-target_link_libraries(TrampolineCustomizer ${cnoid-plugin_LIBRARIES} ${YAML_CPP_LIBRARIES})
-set_target_properties(TrampolineCustomizer PROPERTIES
+# Customizer
+set(target CnoidTrampolineCustomizer)
+add_library(${target} src/TrampolineCustomizer.cpp)
+target_link_libraries(${target} ${cnoid-plugin_LIBRARIES} ${YAML_CPP_LIBRARIES})
+set_target_properties(${target} PROPERTIES
   COMPILE_FLAG "-fPIC"
-  PREFIX ""
+  PREFIX "lib"
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-add_library(PDController SHARED src/PDController.cpp)
-target_link_libraries(PDController ${cnoid-plugin_LIBRARIES})
-set_target_properties(PDController PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}
-  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}
-  PREFIX "")
+# Controller
+set(target CnoidPDController)
+add_library(${target} SHARED src/PDController.cpp)
+target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
+set_target_properties(${target} PROPERTIES
+  COMPILE_FLAG "-fPIC"
+  PREFIX "lib"
+  SUFFIX ".so"
+  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 # cnoid
 configure_file(${PROJECT_SOURCE_DIR}/world/SampleRobotTrampoline.cnoid.in ${PROJECT_SOURCE_DIR}/world/SampleRobotTrampoline.cnoid @ONLY)

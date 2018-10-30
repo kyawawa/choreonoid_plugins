@@ -100,7 +100,7 @@ items:
               data:
                 isNoDelayMode: true
                 controllerOptions: ""
-                controller: "@PROJECT_SOURCE_DIR@/PDController.so"
+                controller: "@PROJECT_SOURCE_DIR@/libCnoidPDController.so"
                 baseDirectory: "None"
                 reloading: true
         -
