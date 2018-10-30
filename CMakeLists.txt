@@ -42,6 +42,15 @@ set_target_properties(${target} PROPERTIES
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
+# Plugin
+set(target CnoidResetSimulationPlugin)
+add_library(${target} SHARED plugins/ResetSimulationPlugin.cpp)
+target_link_libraries(${target} CnoidPDController ${cnoid-plugin_LIBRARIES})
+set_target_properties(${target} PROPERTIES
+  PREFIX "lib"
+  SUFFIX ".so"
+  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
+
 # cnoid
 configure_file(${PROJECT_SOURCE_DIR}/world/SampleRobotTrampoline.cnoid.in ${PROJECT_SOURCE_DIR}/world/SampleRobotTrampoline.cnoid @ONLY)
 

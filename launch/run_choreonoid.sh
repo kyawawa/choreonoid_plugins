@@ -14,6 +14,7 @@ rtm_args=()
 latch=0
 
 export CNOID_CUSTOMIZER_PATH=$(rospack find choreonoid_plugins)
+export CNOID_PLUGIN_PATH=$(rospack find choreonoid_plugins)
 export CUSTOMIZER_CONF_PATH=$(rospack find choreonoid_plugins)/config/trampoline.yaml
 
 if [ -z "$cnoid_proj" ]; then
