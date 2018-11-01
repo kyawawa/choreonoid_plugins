@@ -45,7 +45,15 @@ set_target_properties(${target} PROPERTIES
 # Plugin
 set(target CnoidResetSimulationPlugin)
 add_library(${target} SHARED plugins/ResetSimulationPlugin.cpp)
-target_link_libraries(${target} CnoidPDController ${cnoid-plugin_LIBRARIES})
+target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
+set_target_properties(${target} PROPERTIES
+  PREFIX "lib"
+  SUFFIX ".so"
+  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
+
+set(target CnoidCloneItemPlugin)
+add_library(${target} SHARED plugins/CloneItemPlugin.cpp)
+target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
 set_target_properties(${target} PROPERTIES
   PREFIX "lib"
   SUFFIX ".so"
