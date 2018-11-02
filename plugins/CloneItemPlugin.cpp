@@ -41,13 +41,15 @@ private:
         BodyItemPtr item = ItemTreeView::instance()->selectedItem<BodyItem>();
         ItemPtr parent = item->parentItem();
         for (int i = 0; i < half_side_num * 2 - 1; ++i) {
+            int x_place = i + 1 - half_side_num;
             for (int j = 0; j < half_side_num * 2 - 1; ++j) {
-                if (i != half_side_num && j != half_side_num) {
+                int y_place = j + 1 - half_side_num;
+                if (!(x_place == 0 && y_place == 0)) {
                     BodyItemPtr duplicated = static_cast<BodyItem*>(item->duplicate());
                     LinkPtr root = duplicated->body()->rootLink();
                     // TODO: Reference position from original item
-                    root->p()[0] = (i + 1 - half_side_num) * interval; // x
-                    root->p()[1] = (j + 1 - half_side_num) * interval; // y
+                    root->p()[0] = x_place * interval; // x
+                    root->p()[1] = y_place * interval; // y
                     parent->addChildItem(duplicated);
                     ItemTreeView::instance()->checkItem(duplicated);
                 }
