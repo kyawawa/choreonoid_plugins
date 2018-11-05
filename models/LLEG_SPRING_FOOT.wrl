@@ -1,0 +1,117 @@
+#VRML V2.0 utf8
+DEF LLEG_SPRING_FIXED Joint {
+   jointType "fixed"
+   # x: (/ (/ (- 130.5 99.5) 2.0) 1000.0)
+   # y: (/ (/ (- 82.0 60.0) 2.0) 1000.0)
+   # z: (/ -110 1000.0)
+   translation 0.015 0.011 -0.110
+   children [
+      DEF LLEG_SPRING_FOOT_UPPER Segment {
+         # LLEG_SPRING_FOOT
+         centerOfMass 0.001607777 0.0021038011 -0.06565155 # TODO
+         mass 3.0
+         momentsOfInertia [0.012599 0.000057 -0.000602 0.000057 0.013954 -0.000404 -0.000602 -0.000404 0.005494] # TODO
+         children [
+            Transform {
+               translation 0 0 0
+               children [
+                  Shape {
+                     appearance Appearance {
+                        material Material {
+                           diffuseColor 0 1.0 0
+                           specularColor 0 1.0 0
+                           emissiveColor 0 0 0
+                           shininess 0.2
+                           transparency 0
+                        }
+                     }
+                     geometry Box {
+                        size 0.230 0.142 0.003
+                     }
+                  }
+                  Transform {
+                     translation 0 0 -0.15 # height / 2
+                     rotation 1 0 0 1.5708
+                     children [
+                        Shape {
+                           appearance Appearance {
+                              material Material {
+                                 diffuseColor 0 1.0 0
+                                 specularColor 0 1.0 0
+                                 emissiveColor 0 0 0
+                                 shininess 0.2
+                                 transparency 0
+                              }
+                           }
+                           geometry Cylinder {
+                              radius 0.04
+                              height 0.30
+                           }
+                        }
+                     ]
+                  }
+               ]
+            }
+         ]
+      } # Segment LLEG_SPRING_FOOT_UPPER
+      DEF LLEG_SPRING_Z Joint {
+         jointType "slide"
+         # jointId 13
+         jointAxis "Z"
+         translation 0 0 -0.3
+         llimit [-0.1]
+         ulimit [0.1]
+         children [
+            DEF LLEG_SPRING_FOOT_LOWER Segment {
+               # LLEG_SPRING_FOOT
+               centerOfMass 0.001607777 0.0021038011 -0.06565155 # TODO
+               mass 0.7
+               momentsOfInertia [0.012599 0.000057 -0.000602 0.000057 0.013954 -0.000404 -0.000602 -0.000404 0.005494] # TODO
+               children [
+                  Transform {
+                     translation 0 0 -0.04
+                     rotation 1 0 0 1.5708
+                     children [
+                        Shape {
+                           appearance Appearance {
+                              material Material {
+                                 diffuseColor 1.0 1.0 0.067
+                                 specularColor 0.73 0.33 0.73
+                                 emissiveColor 0 0 0
+                                 shininess 0.2
+                                 transparency 0
+                              }
+                           }
+                           geometry Cylinder {
+                              radius 0.041
+                              height 0.08
+                           }
+                        }
+                        Transform {
+                           translation 0 -0.04 0
+                           rotation 1 0 0 -1.5708
+                           children [
+                              Shape {
+                                 appearance Appearance {
+                                    material Material {
+                                       diffuseColor 0 0.66 1.0 #0066ff
+                                       specularColor 0 0 0
+                                       emissiveColor 0 0 0
+                                       shininess 0.2
+                                       transparency 0
+                                    }
+                                 }
+                                 geometry Sphere {
+                                    radius 0.04
+                                 }
+                              }
+                           ]
+                        }
+                     ]
+                  }
+               ]
+            } # Segment LLEG_SPRING_FOOT_LOWER
+         ]
+      } # LLEG_SPRING_Z
+   ]
+} # Joint LLEG_SPRING_FIXED

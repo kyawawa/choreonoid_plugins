@@ -1,3 +1,4 @@
 *.so
 *.cnoid
 !world/TrampolineSpringModel.cnoid
+models/CHIDORImain_springfoot.wrl

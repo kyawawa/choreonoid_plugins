@@ -6,7 +6,6 @@
  * @author Tatsuya Ishikawa
  */
 
-// #include <cnoid/RootItem>
 #include "PDController.h"
 #include <iostream>
 #include <fstream>
@@ -15,15 +14,15 @@ namespace cnoid {
 
 void PDController::PDControl()
 {
-    for (size_t i = 0; i < joints_.size(); ++i) {
-        double q = joints_[i]->q(); // input
-        double dq = (q - q_prev_[i]) / dt_;
-        double dq_ref = (q_ref_[i] - q_ref_prev_[i]) / dt_;
-        joints_[i]->u() = p_gain_[i] * (q_ref_[i] - q) + d_gain_[i] * (dq_ref - dq); // output
-        joints_[i]->u() = std::max(std::min(joints_[i]->u(), u_limit_[i]), -u_limit_[i]);
+    for (size_t idx : actuation_joints_idx_) {
+        double q = joints_[idx]->q(); // input
+        double dq = (q - q_prev_[idx]) / dt_;
+        double dq_ref = (q_ref_[idx] - q_ref_prev_[idx]) / dt_;
+        joints_[idx]->u() = p_gain_[idx] * (q_ref_[idx] - q) + d_gain_[idx] * (dq_ref - dq); // output
+        joints_[idx]->u() = std::max(std::min(joints_[idx]->u(), u_limit_[idx]), -u_limit_[idx]);
 
-        q_prev_[i] = q;
-        q_ref_prev_[i] = q_ref_[i];
+        q_prev_[idx] = q;
+        q_ref_prev_[idx] = q_ref_[idx];
     }
 }
 
@@ -36,7 +35,7 @@ void PDController::parseOptionString(SimpleControllerIO* io)
             std::ifstream ifs(option_string_vec[++i]);
             if (ifs.is_open()) {
                 double gain;
-                for (size_t idx = 0; idx < joints_.size(); ++idx){
+                for (size_t idx : actuation_joints_idx_) {
                     if (ifs >> gain) {
                         p_gain_[idx] = gain;
                     } else {
@@ -58,7 +57,7 @@ void PDController::parseOptionString(SimpleControllerIO* io)
             std::ifstream ifs(option_string_vec[++i]);
             if (ifs.is_open()) {
                 double ulimit;
-                for (size_t idx = 0; idx < joints_.size(); ++idx){
+                for (size_t idx : actuation_joints_idx_) {
                     if (ifs >> ulimit) {
                         u_limit_[idx] = ulimit;
                     } else {
@@ -77,6 +76,7 @@ bool PDController::initialize(SimpleControllerIO* io)
 {
     Body::JointAccessor joint_list = io->body()->joints();
 
+    actuation_joints_idx_.reserve(io->body()->numJoints());
     joints_.reserve(io->body()->numJoints());
     q_ref_.reserve(io->body()->numJoints());
     q_prev_.reserve(io->body()->numJoints());
@@ -85,9 +85,9 @@ bool PDController::initialize(SimpleControllerIO* io)
     d_gain_.reserve(io->body()->numJoints());
     u_limit_.reserve(io->body()->numJoints());
 
-    for (auto it = joint_list.begin(); it != joint_list.end(); ++it) {
+    size_t joint_idx = 0;
+    for (auto it = joint_list.begin(); it != joint_list.end(); ++it, ++joint_idx) {
         (*it)->setActuationMode(Link::JOINT_TORQUE);
-        io->enableIO(*it);
         joints_.push_back(*it);
         q_ref_.push_back((*it)->q());
         q_prev_.push_back((*it)->q());
@@ -95,10 +95,15 @@ bool PDController::initialize(SimpleControllerIO* io)
         p_gain_.push_back(3000.0);
         d_gain_.push_back(200.0);
         u_limit_.push_back(500);
+
+        // Ignore spring joints
+        if ((*it)->name().find("SPRING") == std::string::npos) {
+            io->enableIO(*it);
+            actuation_joints_idx_.push_back(joint_idx);
+        }
     }
 
     dt_ = io->timeStep();
-    // robot_name_ = io->body()->name();
     parseOptionString(io);
 
     return true;

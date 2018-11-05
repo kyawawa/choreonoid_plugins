@@ -3,7 +3,9 @@ project(choreonoid_plugins)
 
 find_package(catkin COMPONENTS
   hrpsys_choreonoid_tutorials
+  hrpsys_ros_bridge_tutorials
   jvrc_models
+  jsk_models
   )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -22,7 +24,7 @@ catkin_package(
 include_directories(${cnoid-plugin_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${YAML_CPP_INCLUDEDIR})
 link_directories(${cnoid-plugin_LIBRARY_DIRS} ${catkin_LIBRARY_DIRS})
 
-# Customizer
+### Customizer ###
 set(target CnoidTrampolineCustomizer)
 add_library(${target} src/TrampolineCustomizer.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES} ${YAML_CPP_LIBRARIES})
@@ -32,7 +34,7 @@ set_target_properties(${target} PROPERTIES
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-# Controller
+### Controller ###
 set(target CnoidPDController)
 add_library(${target} SHARED src/PDController.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
@@ -42,7 +44,16 @@ set_target_properties(${target} PROPERTIES
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-# Plugin
+set(target CnoidSpringFootController)
+add_library(${target} SHARED src/SpringFootController.cpp)
+target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
+set_target_properties(${target} PROPERTIES
+  COMPILE_FLAG "-fPIC"
+  PREFIX "lib"
+  SUFFIX ".so"
+  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
+
+### Plugin ###
 set(target CnoidResetSimulationPlugin)
 add_library(${target} SHARED plugins/ResetSimulationPlugin.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
@@ -59,9 +70,10 @@ set_target_properties(${target} PROPERTIES
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
-# cnoid
+### cnoid ###
 configure_file(${PROJECT_SOURCE_DIR}/world/SampleRobotTrampoline.cnoid.in ${PROJECT_SOURCE_DIR}/world/SampleRobotTrampoline.cnoid @ONLY)
 
+### JAXON ###
 if(${hrpsys_choreonoid_tutorials_FOUND} AND ${jvrc_models_FOUND})
   set(JVRC_MODELS_DIR ${jvrc_models_SOURCE_PREFIX})
   set(PDGAINS_YAML_FILE ${hrpsys_choreonoid_tutorials_SOURCE_PREFIX}/models/JAXON_JVRC.PDgains_sim.dat)
@@ -70,4 +82,19 @@ if(${hrpsys_choreonoid_tutorials_FOUND} AND ${jvrc_models_FOUND})
   configure_file(${PROJECT_SOURCE_DIR}/world/JAXONTrampoline.cnoid.in ${PROJECT_SOURCE_DIR}/world/JAXONTrampoline.cnoid @ONLY)
 else()
   message(WARNING "Cound not find hrpsys_choreonoid_tutorials and jvrc_models")
+endif()
+
+### CHIDORI ###
+if (${jsk_models_FOUND})
+  file(READ models/LLEG_SPRING_FOOT.wrl LLEG_SPRING_FOOT)
+  file(READ models/RLEG_SPRING_FOOT.wrl RLEG_SPRING_FOOT)
+  set(CHIDORI_MODEL_DIR ${jsk_models_SOURCE_PREFIX}/CHIDORI)
+  configure_file(${PROJECT_SOURCE_DIR}/models/CHIDORImain_springfoot.wrl.in ${PROJECT_SOURCE_DIR}/models/CHIDORImain_springfoot.wrl @ONLY)
+
+  set(PDGAINS_YAML_FILE ${hrpsys_ros_bridge_tutorials_SOURCE_PREFIX}/models/CHIDORI.PDgains_sim.dat)
+  set(TORQUE_LIMITS_FILE ${PROJECT_SOURCE_DIR}/config/CHIDORITorqueLimits.dat)
+  set(SPRING_CONF_FILE ${PROJECT_SOURCE_DIR}/config/FOOT_SPRING.dat)
+  configure_file(${PROJECT_SOURCE_DIR}/world/CHIDORIFloor.cnoid.in ${PROJECT_SOURCE_DIR}/world/CHIDORIFloor.cnoid @ONLY)
+else()
+  message(WARNING "Cound not find jsk_models")
 endif()

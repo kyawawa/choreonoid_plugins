@@ -1,0 +1,757 @@
+#Update 2015.09.11
+#VRML V2.0 utf8
+
+PROTO Joint [
+ exposedField     SFVec3f      center              0 0 0
+ exposedField     MFNode       children            []
+ exposedField     MFFloat      llimit              []
+ exposedField     MFFloat      lvlimit              []
+ exposedField     SFRotation   limitOrientation    0 0 1 0
+ exposedField     SFString     name                ""
+ exposedField     SFRotation   rotation            0 0 1 0
+ exposedField     SFVec3f      scale               1 1 1
+ exposedField     SFRotation   scaleOrientation    0 0 1 0
+ exposedField     MFFloat      stiffness           [ 0 0 0 ]
+ exposedField     SFVec3f      translation         0 0 0
+ exposedField     MFFloat      ulimit              []
+ exposedField     MFFloat      uvlimit             []
+ exposedField     MFFloat      climit              []
+ exposedField     MFFloat      dh                  [ 0 0 0 0 ]
+ exposedField     SFString     jointType           ""
+ exposedField     SFInt32      jointId             -1
+ exposedField     SFString     jointAxis           "Z"
+
+ exposedField     SFFloat      gearRatio     1
+ exposedField     SFFloat      rotorInertia  0
+ exposedField     SFFloat      rotorResistor 0
+ exposedField     SFFloat      torqueConst   1
+ exposedField     SFFloat      encoderPulse  1
+]
+{
+   Transform {
+      center           IS center
+      children         IS children
+      rotation         IS rotation
+      scale            IS scale
+      scaleOrientation IS scaleOrientation
+      translation      IS translation
+   }
+}
+
+PROTO Segment [
+ field           SFVec3f     bboxCenter        0 0 0
+ field           SFVec3f     bboxSize          -1 -1 -1
+ exposedField    SFVec3f     centerOfMass      0 0 0
+ exposedField    MFNode      children          [ ]
+ exposedField    SFNode      coord             NULL
+ exposedField    MFNode      displacers        [ ]
+ exposedField    SFFloat     mass              0
+ exposedField    MFFloat     momentsOfInertia  [ 0 0 0 0 0 0 0 0 0 ]
+ exposedField    SFString    name              ""
+ eventIn         MFNode      addChildren
+ eventIn         MFNode      removeChildren
+]
+{
+   Group {
+      addChildren    IS addChildren
+      bboxCenter     IS bboxCenter
+      bboxSize       IS bboxSize
+      children       IS children
+      removeChildren IS removeChildren
+   }
+}
+
+PROTO Humanoid [
+ field           SFVec3f    bboxCenter            0 0 0
+ field           SFVec3f    bboxSize              -1 -1 -1
+ exposedField    SFVec3f    center                0 0 0
+ exposedField    MFNode     humanoidBody          [ ]
+ exposedField    MFString   info                  [ ]
+ exposedField    MFNode     joints                [ ]
+ exposedField    SFString   name                  ""
+ exposedField    SFRotation rotation              0 0 1 0
+ exposedField    SFVec3f    scale                 1 1 1
+ exposedField    SFRotation scaleOrientation      0 0 1 0
+ exposedField    MFNode     segments              [ ]
+ exposedField    MFNode     sites                 [ ]
+ exposedField    SFVec3f    translation           0 0 0
+ exposedField    SFString   version               "1.1"
+ exposedField    MFNode     viewpoints            [ ]
+]
+{
+   Transform {
+      bboxCenter       IS bboxCenter
+      bboxSize         IS bboxSize
+      center           IS center
+      rotation         IS rotation
+      scale            IS scale
+      scaleOrientation IS scaleOrientation
+      translation      IS translation
+      children [
+         Group {
+            children IS viewpoints
+         }
+         Group {
+            children IS humanoidBody
+         }
+        ]
+   }
+}
+
+PROTO VisionSensor [
+ exposedField SFVec3f    translation       0 0 0
+ exposedField SFRotation rotation              0 0 1 0
+ exposedField SFFloat    fieldOfView       0.785398
+ exposedField SFString   name              ""
+ exposedField SFFloat    frontClipDistance 0.01
+ exposedField SFFloat    backClipDistance  10.0
+ exposedField SFString   type              "NONE"
+ exposedField SFInt32    sensorId          -1
+ exposedField SFInt32    width             320  #
+ exposedField SFInt32    height            240  #
+ exposedField SFFloat    frameRate         30
+ #exposedField MFNode    children            [] # for me
+]
+{
+   Transform {
+      rotation         IS rotation
+      translation      IS translation
+      #children IS children # for me
+   }
+}
+
+
+PROTO ForceSensor [
+ exposedField SFVec3f maxForce -1 -1 -1
+ exposedField SFVec3f maxTorque -1 -1 -1
+ exposedField SFVec3f translation 0 0 0
+ exposedField SFRotation rotation 0 0 1 0
+ exposedField SFInt32 sensorId -1
+]
+{
+   Transform {
+      translation IS translation
+      rotation IS rotation
+   }
+}
+
+PROTO Gyro [
+ exposedField SFVec3f maxAngularVelocity -1 -1 -1
+ exposedField SFVec3f translation 0 0 0
+ exposedField SFRotation rotation 0 0 1 0
+ exposedField SFInt32 sensorId -1
+]
+{
+   Transform {
+      translation IS translation
+      rotation IS rotation
+   }
+}
+
+PROTO AccelerationSensor [
+ exposedField SFVec3f maxAcceleration -1 -1 -1
+ exposedField SFVec3f translation 0 0 0
+ exposedField SFRotation rotation 0 0 1 0
+ exposedField SFInt32 sensorId -1
+]
+{
+   Transform {
+      translation IS translation
+      rotation IS rotation
+   }
+}
+
+PROTO PressureSensor [
+ exposedField SFFloat maxPressure -1
+ exposedField SFVec3f translation 0 0 0
+ exposedField SFRotation rotation 0 0 1 0
+ exposedField SFInt32 sensorId -1
+]
+{
+   Transform {
+      translation IS translation
+      rotation IS rotation
+   }
+}
+
+PROTO PhotoInterrupter [
+ exposedField SFVec3f transmitter 0 0 0
+ exposedField SFVec3f receiver 0 0 0
+ exposedField SFInt32 sensorId -1
+]
+{
+   Transform{
+      children [
+         Transform{
+            translation IS transmitter
+         }
+         Transform{
+            translation IS receiver
+         }
+      ]
+   }
+}
+
+PROTO CylinderSensorZ [
+ exposedField    SFFloat    maxAngle       -1
+ exposedField    SFFloat    minAngle        0
+ exposedField    MFNode     children        [ ]
+]
+{
+   Transform{
+      rotation 1 0 0 1.5708
+      children [
+         DEF SensorY CylinderSensor{
+            maxAngle IS maxAngle
+            minAngle IS minAngle
+         }
+         DEF AxisY Transform{
+            children [
+               Transform{
+                  rotation 1 0 0 -1.5708
+                  children IS children
+               }
+              ]
+         }
+        ]
+   }
+   ROUTE SensorY.rotation_changed TO AxisY.set_rotation
+}
+
+PROTO CylinderSensorY [
+ exposedField    SFFloat    maxAngle       -1
+ exposedField    SFFloat    minAngle        0
+ exposedField    MFNode     children        [ ]
+]
+{
+   Transform{
+      rotation 0 1 0 1.5708
+      children [
+         DEF SensorX CylinderSensor{
+            maxAngle IS maxAngle
+            minAngle IS minAngle
+         }
+         DEF AxisX Transform{
+            children [
+               Transform{
+                  rotation 0 1 0 -1.5708
+                  children IS children
+               }
+              ]
+         }
+        ]
+   }
+   ROUTE SensorX.rotation_changed TO AxisX.set_rotation
+}
+
+PROTO CylinderSensorX [
+ exposedField    SFFloat    maxAngle       -1
+ exposedField    SFFloat    minAngle        0
+ exposedField    MFNode     children        [ ]
+]
+{
+   Transform{
+      rotation 0 0 1 -1.5708
+      children [
+         DEF SensorZ CylinderSensor{
+            maxAngle IS maxAngle
+            minAngle IS minAngle
+         }
+         DEF AxisZ Transform{
+            children [
+               Transform{
+                  rotation 0 0 1 1.5708
+                  children IS children
+               }
+              ]
+         }
+        ]
+   }
+   ROUTE SensorZ.rotation_changed TO AxisZ.set_rotation
+}
+
+NavigationInfo {
+   avatarSize    0.5
+   headlight     TRUE
+   type  ["EXAMINE", "ANY"]
+}
+
+Background {
+   skyColor 0.4 0.6 0.4
+}
+
+Viewpoint {
+   position    3 0 0.835
+   orientation 0.5770 0.5775 0.5775 2.0935
+}
+
+DEF CHIDORI Humanoid {
+   name "CHIDORI"
+
+   humanoidBody [
+    DEF WAIST Joint {
+       jointType "free"
+       translation 0 0 1.0 # height from ground to robot origin
+       children [
+          DEF BODY Segment {
+
+             #BODY
+             centerOfMass -0.039411518 0.002224565 0.122653686
+             mass 14.317748
+             momentsOfInertia [ 0.458867 0.005282 -0.029983 0.005282 0.490286 0.00532 -0.029983 0.00532 0.311201 ] ## uniq density estimation
+             children [
+                DEF gsensor AccelerationSensor {
+                   sensorId 0
+                   translation -0.1015 -0.005 0.0419
+                   rotation -0.57735 -0.57735 0.57735 2.09439
+                }
+                DEF gyrometer Gyro {
+                   sensorId 0
+                   translation -0.1015 -0.005 0.0419
+                   rotation -0.57735 -0.57735 0.57735 2.09439
+                }
+                Inline { url "@CHIDORI_MODEL_DIR@/BODY.wrl" }
+             ]
+          } # End of BODY
+          #========== RLEG START ==========#
+
+          DEF RLEG_JOINT0 Joint { #hip yaw
+             jointType "rotate"
+             jointId 0
+             jointAxis "Z"
+             translation 0.0 -0.1 0.0095
+             rotation 0 0 1 0
+             llimit [-1.7453292519943295]  #-100
+             ulimit [1.7453292519943295]   #+100
+             lvlimit [-17.4444]
+             uvlimit [ 17.4444]
+             climit [44.715] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=220[Nm]
+             torqueConst 0.020500
+             gearRatio 240.0
+             rotorInertia 7.0e-6
+             children [
+                DEF RLEG_LINK0_MOV CylinderSensorZ {
+                   maxAngle  1.04719755
+                   minAngle -1.04719755
+                   children [
+                      DEF RLEG_LINK0 Segment {
+                         centerOfMass -0.023297925 0.006369216 -0.079119425
+                         mass 2.701374
+                         momentsOfInertia [ 0.025516 -0.000389 0.006233 -0.000389 0.029557 -0.000979 0.006233 -0.000979 0.007553 ]
+                         children [
+                            Inline { url "@CHIDORI_MODEL_DIR@/RLEG_LINK0.wrl" }
+                         ]
+                      } # End of RLEG_LINK0
+
+                      DEF RLEG_JOINT1 Joint { #hip roll
+                         jointType "rotate"
+                         jointId 1
+                         jointAxis "X"
+                         translation -0.002 0.0 -0.135
+                         rotation 1 0 0 0
+                         llimit [-0.785398163]  #-45
+                         ulimit [0.523598776]   #+30
+                         lvlimit [-17.4444]
+                         uvlimit [ 17.4444]
+                         climit [91.463] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=450[Nm]
+                         torqueConst 0.020500
+                         gearRatio 240.0
+                         rotorInertia 7.0e-6
+                         children [
+                            DEF RLEG_LINK1_MOV CylinderSensorX {
+                               maxAngle  0.523598776
+                               minAngle -0.785398163
+                               children [
+                                  DEF RLEG_LINK1 Segment {
+                                     centerOfMass -0.005158201 -0.005423788 0.000000004
+                                     mass 0.939505
+                                     momentsOfInertia [ 0.001014 -0.000003 0 -0.000003 0.000787 0 0 0 0.001419 ]
+                                     children [
+                                        Inline { url "@CHIDORI_MODEL_DIR@/RLEG_LINK1.wrl" }
+                                     ]
+                                  } # End of RLEG_LINK1
+
+                                  DEF RLEG_JOINT2 Joint {  #hip pitch
+                                     jointType "rotate"
+                                     jointId 2
+                                     jointAxis "Y"
+                                     translation 0 0 0
+                                     rotation 0 1 0 0
+                                     llimit [-2.0943951]  #-120
+                                     ulimit [0.785398163]   #+45
+                                     lvlimit [-17.4444]
+                                     uvlimit [ 17.4444]
+                                     climit [91.463] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=450[Nm]
+                                     torqueConst 0.020500
+                                     gearRatio 240.0
+                                     rotorInertia 7.0e-6
+                                     children [
+                                        DEF RLEG_LINK2_MOV CylinderSensorY {
+                                           maxAngle  0.785398163
+                                           minAngle -2.0943951
+                                           children [
+                                              DEF RLEG_LINK2 Segment {
+                                                 centerOfMass 0.003104862 -0.026083549 -0.184418221
+                                                 mass 5.507220
+                                                 momentsOfInertia [ 0.268054 3.9e-05 -0.012861 3.9e-05 0.26452 0.024989 -0.012861 0.024989 0.02221 ]
+                                                 children [
+                                                    Inline { url "@CHIDORI_MODEL_DIR@/RLEG_LINK2.wrl" }
+                                                 ]
+                                              } # End of RLEG_LINK2
+
+                                              DEF RLEG_JOINT3 Joint {  #knee pitch
+                                                 jointType "rotate"
+                                                 jointId 3
+                                                 jointAxis "Y"
+                                                 translation 0 0 -0.350
+                                                 rotation 0 1 0 0
+                                                 llimit [0.0]  #0
+                                                 ulimit [2.53073]   #+150
+                                                 lvlimit [-17.4444]
+                                                 uvlimit [ 17.4444]
+                                                 climit [91.463] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=450[Nm]
+                                                 torqueConst 0.020500
+                                                 gearRatio 240.0
+                                                 rotorInertia 7.0e-6
+                                                 children [
+                                                    DEF RLEG_LINK3_MOV CylinderSensorY {
+                                                       maxAngle 2.53073
+                                                       minAngle 0.0
+                                                       children [
+                                                          DEF RLEG_LINK3 Segment {
+                                                             centerOfMass 0.027277013 -0.016720423 -0.17309116
+                                                             mass 2.886388
+                                                             momentsOfInertia [ 0.125176 -0.000859 -0.009489 -0.000859 0.127376 0.008798 -0.009489 0.008798 0.009222 ]
+                                                             children [
+                                                                Inline { url "@CHIDORI_MODEL_DIR@/RLEG_LINK3.wrl" }
+                                                             ]
+                                                          } # End of RLEG_LINK3
+
+                                                          DEF RLEG_JOINT4 Joint { #ankle pitch
+                                                             jointType "rotate"
+                                                             jointId 4
+                                                             jointAxis "Y"
+                                                             translation 0 0.0 -0.350
+                                                             rotation 0 1 0 0
+                                                             llimit [-1.57079633]  #-90
+                                                             ulimit [1.57079633]   #+90
+                                                             lvlimit [-17.4444]
+                                                             uvlimit [ 17.4444]
+                                                             climit [44.715] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=220[Nm]
+                                                             torqueConst 0.020500
+                                                             gearRatio 240.0
+                                                             rotorInertia 7.0e-6
+                                                             children [
+                                                                DEF RLEG_LINK4_MOV CylinderSensorY {
+                                                                   maxAngle 1.57079633
+                                                                   minAngle -1.57079633
+                                                                   children [
+                                                                      DEF RLEG_LINK4 Segment {
+                                                                         centerOfMass -0.009922323 -0.002492438 -0.006859071
+                                                                         mass 0.840762
+                                                                         momentsOfInertia [ 0.000887 0.000018 0.000022 0.000018 0.001261 -0.00002 0.000022 -0.00002 0.000978 ]
+                                                                         children [
+                                                                            Inline { url "@CHIDORI_MODEL_DIR@/RLEG_LINK4.wrl" }
+                                                                         ]
+                                                                      } # End of RLEG_LINK4
+
+                                                                      # Wacoh 1000N, Plane foot
+                                                                      DEF RLEG_JOINT5 Joint { #ankle roll
+                                                                         jointType "rotate"
+                                                                         jointId 5
+                                                                         jointAxis "X"
+                                                                         translation 0 0 -0.04
+                                                                         rotation 1 0 0 0
+                                                                         llimit [-1.04719755]  #-60
+                                                                         ulimit [1.04719755]   #+60
+                                                                         lvlimit [-17.4444]
+                                                                         uvlimit [ 17.4444]
+                                                                         climit [44.530] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=220[Nm]
+                                                                         torqueConst 0.020500
+                                                                         gearRatio 241.5
+                                                                         rotorInertia 7.0e-6
+                                                                         children [
+                                                                            DEF RLEG_LINK5_MOV CylinderSensorX {
+                                                                               maxAngle 1.04719755
+                                                                               minAngle -1.04719755
+                                                                               children [
+                                                                                  DEF RLEG_LINK5 Segment {
+                                                                                     centerOfMass 0 0 0
+                                                                                     mass 0.1
+                                                                                     momentsOfInertia [0.005 0 0  0 0.005 0  0 0 0.005]
+                                                                                     children [
+                                                                                        DEF rfsensor ForceSensor {
+                                                                                           translation 0.0005 0 -0.057
+                                                                                           rotation 1 0 0 3.14159
+                                                                                           sensorId 0
+                                                                                        }
+                                                                                        Inline { url "@CHIDORI_MODEL_DIR@/RLEG_LINK5.wrl" }
+                                                                                     ]
+                                                                                  } # End of RLEG_LINK5
+                                                                                  ##### SPRING FOOT #####
+                                                                                  @RLEG_SPRING_FOOT@
+                                                                               ]
+                                                                            }
+                                                                         ]
+                                                                      } # End of RLEG_JOINT5
+                                                                   ]
+                                                                }
+                                                             ]
+                                                          } # End of RLEG_JOINT4
+                                                       ]
+                                                    }
+                                                 ]
+                                              } # End of RLEG_JOINT3
+                                           ]
+                                        }
+                                     ]
+                                  } # End of RLEG_JOINT2
+                               ]
+                            }
+                         ]
+                      } # End of RLEG_JOINT1
+                   ]
+                }
+             ]
+          } # End of RLEG_JOINT0
+
+          #========== LLEG START ==========#
+
+          DEF LLEG_JOINT0 Joint { #hip YAW
+             jointType "rotate"
+             jointId 6
+             jointAxis "Z"
+             translation 0.0 0.1 0.0095
+             rotation 0 0 1 0
+             llimit [-1.7453292519943295]  #-100
+             ulimit [1.7453292519943295]   #+100
+             lvlimit [-17.4444]
+             uvlimit [ 17.4444]
+             climit [44.715] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=220[Nm]
+             torqueConst 0.020500
+             gearRatio 240.0
+             rotorInertia 7.0e-6
+             children [
+                DEF LLEG_LINK0_MOV CylinderSensorZ {
+                   maxAngle  1.04719755
+                   minAngle -1.04719755
+                   children [
+                      DEF LLEG_LINK0 Segment {
+                         centerOfMass -0.023227196 -0.006361942 -0.07918285
+                         mass 2.704453
+                         momentsOfInertia [0.025545 0.000389 0.006217 0.000389 0.029606 0.000979 0.006217 0.000979 0.007544]
+                         children [
+                            Inline { url "@CHIDORI_MODEL_DIR@/LLEG_LINK0.wrl" }
+                         ]
+                      } # End of LLEG_LINK0
+
+                      DEF LLEG_JOINT1 Joint { #hip roll
+                         jointType "rotate"
+                         jointId 7
+                         jointAxis "X"
+                         translation -0.002 0.0 -0.135
+                         rotation 1 0 0 0
+                         llimit [-0.523598776]  #-30
+                         ulimit [0.785398163]   #+45
+                         lvlimit [-17.4444]
+                         uvlimit [ 17.4444]
+                         climit [91.463] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=450[Nm]
+                         torqueConst 0.020500
+                         gearRatio 240.0
+                         rotorInertia 7.0e-6
+                         children [
+                            DEF LLEG_LINK1_MOV CylinderSensorX {
+                               maxAngle  0.523598776
+                               minAngle -0.785398163
+                               children [
+                                  DEF LLEG_LINK1 Segment {
+                                     centerOfMass -0.0047285846 0.0049245474 -0.000000004
+                                     mass 0.919687
+                                     momentsOfInertia [0.000969 0.000003 0.0 0.000003 0.000749 0.0 0.0 0.0 0.001353]
+                                     children [
+                                        Inline { url "@CHIDORI_MODEL_DIR@/LLEG_LINK1.wrl" }
+                                     ]
+                                  } # End of LLEG_LINK1
+
+                                  DEF LLEG_JOINT2 Joint { #hip pitch
+                                     jointType "rotate"
+                                     jointId 8
+                                     jointAxis "Y"
+                                     translation 0 0 0
+                                     rotation 0 1 0 0
+                                     llimit [-2.181661565]  #-125
+                                     ulimit [0.785398163]   #+45
+                                     lvlimit [-17.4444]
+                                     uvlimit [ 17.4444]
+                                     climit [91.463] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=450[Nm]
+                                     torqueConst 0.020500
+                                     gearRatio 240.0
+                                     rotorInertia 7.0e-6
+                                     children [
+                                        DEF LLEG_LINK2_MOV CylinderSensorY {
+                                           maxAngle  0.785398163
+                                           minAngle -2.181661565
+                                           children [
+                                              DEF LLEG_LINK2 Segment {
+                                                 centerOfMass 0.003104853 0.026099592 -0.18445022
+                                                 mass 5.506571
+                                                 momentsOfInertia [0.268042 -0.000039 -0.000039 -0.000039 0.26448 -0.000039 -0.000039 -0.000039 0.022178]
+                                                 children [
+                                                    Inline { url "@CHIDORI_MODEL_DIR@/LLEG_LINK2.wrl" }
+                                                 ]
+                                              } # End of LLEG_LINK2
+
+                                              DEF LLEG_JOINT3 Joint { #knee pitch
+                                                 jointType "rotate"
+                                                 jointId 9
+                                                 jointAxis "Y"
+                                                 translation 0 0 -0.350
+                                                 rotation 0 1 0 0
+                                                 llimit [0.0]  #0
+                                                 ulimit [2.53073]   #+150
+                                                 lvlimit [-17.4444]
+                                                 uvlimit [ 17.4444]
+                                                 climit [91.463] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=450[Nm]
+                                                 torqueConst 0.020500
+                                                 gearRatio 240.0
+                                                 rotorInertia 7.0e-6
+                                                 children [
+                                                    DEF LLEG_LINK3_MOV CylinderSensorY {
+                                                       maxAngle 2.53073
+                                                       minAngle 0.0
+                                                       children [
+                                                          DEF LLEG_LINK3 Segment {
+                                                             centerOfMass 0.027369834 0.01660105 -0.17369393
+                                                             mass 2.876612
+                                                             momentsOfInertia [0.12516 0.000859 -0.009489 0.000859 0.127382 -0.008796 -0.009489 -0.008796 0.009192]
+                                                             children [
+                                                                Inline { url "@CHIDORI_MODEL_DIR@/LLEG_LINK3.wrl" }
+                                                             ]
+                                                          } # End of LLEG_LINK3
+
+                                                          DEF LLEG_JOINT4 Joint { #ankle pitch
+                                                             jointType "rotate"
+                                                             jointId 10
+                                                             jointAxis "Y"
+                                                             translation 0 0 -0.350
+                                                             rotation 0 1 0 0
+                                                             llimit [-1.57079633]  #-90
+                                                             ulimit [1.57079633]   #+90
+                                                             lvlimit [-17.4444]
+                                                             uvlimit [ 17.4444]
+                                                             climit [44.715] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=220[Nm]
+                                                             torqueConst 0.020500
+                                                             gearRatio 240.0
+                                                             rotorInertia 7.0e-6
+                                                             children [
+                                                                DEF LLEG_LINK4_MOV CylinderSensorY {
+                                                                   maxAngle 1.57079633
+                                                                   minAngle -1.57079633
+                                                                   children [
+                                                                      DEF LLEG_LINK4 Segment {
+                                                                         centerOfMass -0.009922232 0.0024927398 -0.006859127
+                                                                         mass 0.840764
+                                                                         momentsOfInertia [0.000887 -0.000018 0.000022 -0.000018 0.001261 0.00002 0.000022 0.00002 0.000978]
+                                                                         children [
+                                                                            Inline { url "@CHIDORI_MODEL_DIR@/LLEG_LINK4.wrl" }
+                                                                         ]
+                                                                      } # End of LLEG_LINK4
+
+                                                                      # Wacoh 1000N, Plane foot
+                                                                      DEF LLEG_JOINT5 Joint {
+                                                                         jointType "rotate"
+                                                                         jointId 11
+                                                                         jointAxis "X"
+                                                                         translation 0 0 -0.04
+                                                                         rotation 1 0 0 0
+                                                                         llimit [-1.04719755]  #-60
+                                                                         ulimit [1.04719755]   #+60
+                                                                         lvlimit [-17.4444]
+                                                                         uvlimit [ 17.4444]
+                                                                         climit [44.530] # ratchetingTorque/(torqueConst*gearRatio), rachetingTorque=220[Nm]
+                                                                         torqueConst 0.020500
+                                                                         gearRatio 241.5
+                                                                         rotorInertia 7.0e-6
+                                                                         children [
+                                                                            DEF LLEG_LINK5_MOV CylinderSensorX {
+                                                                               maxAngle 1.04719755
+                                                                               minAngle -1.04719755
+                                                                               children [
+                                                                                  DEF LLEG_LINK5 Segment {
+                                                                                     centerOfMass 0 0 0
+                                                                                     mass 0.1
+                                                                                     momentsOfInertia [0.005 0 0  0 0.005 0  0 0 0.005]
+                                                                                     children [
+                                                                                        DEF lfsensor ForceSensor {
+                                                                                           translation 0.0005 0 -0.057
+                                                                                           rotation 0 1 0 3.14159
+                                                                                           sensorId 1
+                                                                                        }
+                                                                                        Inline { url "@CHIDORI_MODEL_DIR@/LLEG_LINK5.wrl" }
+                                                                                     ]
+                                                                                  } # End of LLEG_LINK5
+                                                                                  ##### SPRING FOOT #####
+                                                                                  @LLEG_SPRING_FOOT@
+                                                                               ]
+                                                                            }
+                                                                         ]
+                                                                      } # End of LLEG_JOINT5
+                                                                   ]
+                                                                }
+                                                             ]
+                                                          } # End of LLEG_JOINT4
+                                                       ]
+                                                    }
+                                                 ]
+                                              } # End of LLEG_JOINT3
+                                           ]
+                                        }
+                                     ]
+                                  } # End of LLEG_JOINT2
+                               ]
+                            }
+                         ]
+                      } # End of LLEG_JOINT1
+                   ]
+                }
+             ]
+          } # End of LLEG_JOINT0
+
+       ]
+                 }
+   ] # End of [humanoidBody]
+
+
+   joints [
+    USE LLEG_JOINT0,
+    USE LLEG_JOINT1,
+    USE LLEG_JOINT2,
+    USE LLEG_JOINT3,
+    USE LLEG_JOINT4,
+    USE LLEG_JOINT5,
+
+    USE RLEG_JOINT0,
+    USE RLEG_JOINT1,
+    USE RLEG_JOINT2,
+    USE RLEG_JOINT3,
+    USE RLEG_JOINT4,
+    USE RLEG_JOINT5,
+   ] #joints
+
+   segments [
+    USE BODY,
+
+    USE LLEG_LINK0,
+    USE LLEG_LINK1,
+    USE LLEG_LINK2,
+    USE LLEG_LINK3,
+    USE LLEG_LINK4,
+
+    USE RLEG_LINK0,
+    USE RLEG_LINK1,
+    USE RLEG_LINK2,
+    USE RLEG_LINK3,
+    USE RLEG_LINK4,
+    USE RLEG_LINK5,
+   ] #segments
+} #of DEF CHIDORI Humanoid

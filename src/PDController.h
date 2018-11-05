@@ -4,7 +4,6 @@
 #define __PDCONTROLLER_H__
 
 #include <cnoid/SimpleController>
-#include <cnoid/SimulatorItem>
 
 namespace cnoid {
 
@@ -15,6 +14,7 @@ public:
     virtual bool start() override;
     virtual bool control() override;
 private:
+    std::vector<size_t> actuation_joints_idx_;
     std::vector<Link*> joints_;
     std::vector<double> q_ref_;
     std::vector<double> q_prev_;
@@ -28,7 +28,6 @@ private:
 
     void PDControl();
     void parseOptionString(SimpleControllerIO* io);
-    void resetSimulation();
 };
 
 }
