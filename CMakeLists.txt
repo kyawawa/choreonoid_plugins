@@ -26,7 +26,7 @@ link_directories(${cnoid-plugin_LIBRARY_DIRS} ${catkin_LIBRARY_DIRS})
 
 ### Customizer ###
 set(target CnoidTrampolineCustomizer)
-add_library(${target} src/TrampolineCustomizer.cpp)
+add_library(${target} customizers/TrampolineCustomizer.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES} ${YAML_CPP_LIBRARIES})
 set_target_properties(${target} PROPERTIES
   COMPILE_FLAG "-fPIC"
@@ -36,7 +36,7 @@ set_target_properties(${target} PROPERTIES
 
 ### Controller ###
 set(target CnoidPDController)
-add_library(${target} SHARED src/PDController.cpp)
+add_library(${target} SHARED controllers/PDController.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
 set_target_properties(${target} PROPERTIES
   COMPILE_FLAG "-fPIC"
@@ -45,7 +45,7 @@ set_target_properties(${target} PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 set(target CnoidSpringFootController)
-add_library(${target} SHARED src/SpringFootController.cpp)
+add_library(${target} SHARED controllers/SpringFootController.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
 set_target_properties(${target} PROPERTIES
   COMPILE_FLAG "-fPIC"
