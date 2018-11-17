@@ -24,6 +24,16 @@ catkin_package(
 include_directories(${cnoid-plugin_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${YAML_CPP_INCLUDEDIR})
 link_directories(${cnoid-plugin_LIBRARY_DIRS} ${catkin_LIBRARY_DIRS})
 
+### Util ###
+set(UTILDIR util)
+set(target CnoidUtils)
+add_library(${target} ${UTILDIR}/Interpolator.cpp ${UTILDIR}/Kinematics.cpp)
+target_link_libraries(${target})
+set_target_properties(${target} PROPERTIES
+  COMPILE_FLAG "-fPIC"
+  PREFIX "lib"
+  SUFFIX ".so")
+
 ### Customizer ###
 set(target CnoidTrampolineCustomizer)
 add_library(${target} customizers/TrampolineCustomizer.cpp)
@@ -35,6 +45,14 @@ set_target_properties(${target} PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 ### Controller ###
+set(target CnoidControllerBase)
+add_library(${target} SHARED controllers/ControllerBase.cpp)
+target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
+set_target_properties(${target} PROPERTIES
+  COMPILE_FLAG "-fPIC"
+  PREFIX "lib"
+  SUFFIX ".so")
+
 set(target CnoidPDController)
 add_library(${target} SHARED controllers/PDController.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
@@ -47,6 +65,15 @@ set_target_properties(${target} PROPERTIES
 set(target CnoidSpringFootController)
 add_library(${target} SHARED controllers/SpringFootController.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
+set_target_properties(${target} PROPERTIES
+  COMPILE_FLAG "-fPIC"
+  PREFIX "lib"
+  SUFFIX ".so"
+  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
+
+set(target CnoidJumpController)
+add_library(${target} SHARED controllers/JumpController.cpp)
+target_link_libraries(${target} ${cnoid-plugin_LIBRARIES} CnoidControllerBase)
 set_target_properties(${target} PROPERTIES
   COMPILE_FLAG "-fPIC"
   PREFIX "lib"
