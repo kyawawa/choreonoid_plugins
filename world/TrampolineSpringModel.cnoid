@@ -63,6 +63,38 @@ items:
             isEditable: false
         -
           id: 4
+          name: "SampleRobot"
+          plugin: Body
+          class: BodyItem
+          data:
+            modelFile: "${SHARE}/model/SR1/SR1.body"
+            currentBaseLink: ""
+            rootPosition: [ 0, 0, 1.5 ]
+            rootAttitude: [
+              1, 0, 0,
+              0, 1, 0,
+              0, 0, 1 ]
+            jointPositions: [ 0, 0, 0, 0, 0, 0, # RLEG
+                              0, 0, 0, 0, 0, 0, 0, # RARM
+                              0, 0, 0, 0, 0, 0, # LLEG
+                              0, 0, 0, 0, 0, 0, 0, # LARM
+                              0, 0, 0] # WAIST_P, WAIST_R, CHEST
+            initialRootPosition: [ 0, 0, -0.1 ]
+            initialRootAttitude: [
+              1, 0, 0,
+              0, 1, 0,
+              0, 0, 1 ]
+            initialJointPositions: [ 0, 0, 0, 0, 0, 0, # RLEG
+                                     0, 0, 0, 0, 0, 0, 0, # RARM
+                                     0, 0, 0, 0, 0, 0, # LLEG
+                                     0, 0, 0, 0, 0, 0, 0, # LARM
+                                     0, 0, 0] # WAIST_P, WAIST_R, CHEST
+            zmp: [ 0, 0, 0 ]
+            collisionDetection: true
+            selfCollisionDetection: true
+            isEditable: true
+        -
+          id: 5
           name: "AISTSimulator"
           plugin: Body
           class: AISTSimulatorItem
@@ -103,7 +135,7 @@ views:
     mounted: true
     state:
       selected: [ 1 ]
-      checked: [ 1, 2, 3, 4 ]
+      checked: [ 1, 2, 3, 4, 5 ]
       expanded: [ 1, 2 ]
   -
     id: 2

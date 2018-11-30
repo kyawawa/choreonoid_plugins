@@ -21,5 +21,5 @@ if [ -z "$cnoid_proj" ]; then
 else
     (cd /tmp; $choreonoid_exe $cnoid_proj)
     ## for using gdb
-    #(cd /tmp; gdb -ex run --args $choreonoid_exe $enable_const $add_objects $cnoid_proj $start_sim)
+    # (cd /tmp; gdb -ex run --args $choreonoid_exe $cnoid_proj)
 fi
