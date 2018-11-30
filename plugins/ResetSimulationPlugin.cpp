@@ -11,6 +11,8 @@
 #include <cnoid/SimulatorItem>
 #include <cnoid/MessageView>
 #include <cnoid/Timer>
+#include <cnoid/ToolBar>
+#include <cnoid/SpinBox>
 
 using namespace cnoid;
 
@@ -27,13 +29,23 @@ public:
 
     virtual bool initialize() override
     {
-        reset_timer_.sigTimeout().connect([this]() { resetSimulation(); });
+        reset_timer_.sigTimeout().connect([this]() { this->resetSimulation(); });
         reset_timer_.setInterval(100); // 100ms
-        reset_timer_.start();
         reset_interval_ = std::numeric_limits<int>::max();
+        ToolBar* bar = new ToolBar("MyPluginBar");
+        ToolButton* button = bar->addToggleButton("ResetSimulation");
+        button->sigPressed().connect([this]() { this->reset_timer_.start(); });
+        button->sigReleased().connect([this]() { this->reset_timer_.stop(); });
+
+        SpinBox* timeSpin = new SpinBox();
+        timeSpin->setMaximum(1000000); // 1000 seconds
+        timeSpin->setValue(100);
+        timeSpin->sigValueChanged().connect([this, timeSpin](const int value) { this->reset_interval_ = value; });
+        bar->addWidget(timeSpin);
+        addToolBar(bar);
+
         return true;
     }
-
 private:
 
     void resetSimulation()

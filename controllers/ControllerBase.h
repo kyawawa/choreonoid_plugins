@@ -5,8 +5,29 @@
 
 #include <cnoid/SimpleController>
 #include <functional>
+#include <utility>
+#include <queue>
 
 namespace cnoid {
+
+using controlLawPair = std::pair<std::function<void>, unsigned>;
+
+class ControlLaw
+{
+public:
+    ControlLaw();
+    ~ControlLaw();
+    void pushControlLaw(std::function<void> controlFunc, const unsigned control_period)
+    {
+        law_queue.push(std::make_pair(controlFunc, control_period));
+    };
+    void clearControlLaw() { std::queue<controlLawPair>().swap(law_queue); };
+    void execControl();
+
+private:
+    ControlLaw(const Controllaw& org);
+    std::queue<controlLawPair> law_queue;
+};
 
 class ControllerBase : public SimpleController
 {
@@ -26,7 +47,6 @@ protected:
     double dt_;
 
     virtual void parseOptionString(SimpleControllerIO* io);
-    void setControllerCalcRule(std::function<void> controlFunc, unsigned int control_period);
     void PDControl();
 };
 

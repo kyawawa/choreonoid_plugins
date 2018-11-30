@@ -12,6 +12,15 @@
 
 namespace cnoid {
 
+// void ControlLaw::pushControlLaw(std::function<void> controlFunc, const unsigned control_period)
+// {
+// }
+
+void ControlLaw::execControl()
+{
+
+}
+
 void ControllerBase::PDControl()
 {
     for (size_t idx : actuation_joints_idx_) {

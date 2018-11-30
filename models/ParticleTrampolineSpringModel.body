@@ -30,8 +30,8 @@ links:
             translation: [ 0, 0.35, 0 ]
             elements:
               Shape:
-                geometry: { type: Cylinder, height: 0.70, radius: 0.048 }
-                # geometry: { type: Cylinder, height: 0.70, radius: 0.008 }
+                # geometry: { type: Cylinder, height: 0.70, radius: 0.048 }
+                geometry: { type: Cylinder, height: 0.70, radius: 0.008 }
                 appearance: *lower_app
           # -
           #   type: Shape
@@ -65,8 +65,8 @@ links:
         elements:
           -
             type: Shape
-            geometry: { type: Cylinder, height: 0.70, radius: 0.05 }
-            # geometry: { type: Cylinder, height: 0.70, radius: 0.009 }
+            # geometry: { type: Cylinder, height: 0.70, radius: 0.05 }
+            geometry: { type: Cylinder, height: 0.70, radius: 0.009 }
             appearance: &upper_app
               material: { diffuseColor: [ 0.0, 0.31, 0.18 ] }
           -
@@ -74,6 +74,6 @@ links:
             translation: [ 0, 0.35, 0 ]
             elements:
               Shape:
-                geometry: { type: Box, size: [ 5, 0.02, 5 ] }
-                # geometry: { type: Box, size: [ 0.019, 0.02, 0.019 ] }
+                # geometry: { type: Box, size: [ 5, 0.02, 5 ] }
+                geometry: { type: Box, size: [ 0.019, 0.02, 0.019 ] }
                 appearance: *upper_app

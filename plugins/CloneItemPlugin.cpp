@@ -26,9 +26,9 @@ public:
 
     virtual bool initialize() override
     {
-        half_side_num_ = 3;
-        interval_  = 0.05;
-        ToolBar* bar = new ToolBar("CloneItem");
+        half_side_num_ = 10;
+        interval_  = 20;
+        ToolBar* bar = new ToolBar("MyPluginBar");
         bar->addButton("Clone")
             ->sigClicked().connect([this]() { this->cloneItem(this->half_side_num_, this->interval_); });
         addToolBar(bar);

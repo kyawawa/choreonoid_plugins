@@ -11,6 +11,7 @@
 bool solveWeightedWholebodyIK(cnoid::Position* position,
                               std::vector<cnoid::LinkPtr>& joints,
                               const std::vector<IKParam>& ik_params,
+                              std::function<void()> calcFK,
                               const double ik_threshold,
                               const size_t max_iteration,
                               const double damping)
@@ -49,26 +50,29 @@ bool solveWeightedWholebodyIK(cnoid::Position* position,
             if (ik_param.target_type == ik_3daffine) dof = 6;
 
             jacobian.block(dof_accum, 0, dof, rank_c_space) = ik_param.calcJacobian();
-            // ik_param.calcJacobian(jacobian.block(dof_accum, 0, 3, rank_c_space));
             error.segment(dof_accum, dof) = ik_param.calcError();
+            // ik_param.calcJacobian(jacobian.block(dof_accum, 0, dof, rank_c_space));
+            // ik_param.calcError(error.segment(dof_accum, dof));
 
             dof_accum += dof;
         }
 
-        Eigen::VectorXd q_delta = (jacobian.transpose() * IK_weight.asDiagonal() * jacobian + damping_vec.diagonal()).inverse() *
+        const Eigen::VectorXd q_delta = (jacobian.transpose() * IK_weight.asDiagonal() * jacobian +
+                                         damping_vec.diagonal()).inverse() *
             (jacobian.transpose() * IK_weight.asDiagonal() * error);
 
         size_t idx_c_space = 0;
         if (position) {
-            position->translate(Eigen::Vector3d(q_delta[0], q_delta[1], q_delta[2]));
-            Eigen::Vector3d omega_delta(q_delta[3], q_delta[4], q_delta[5]);
+            position->translate(q_delta.segment<3>(0));
+            const Eigen::Vector3d omega_delta(q_delta.segment<3>(3));
             position->rotate(Eigen::AngleAxisd(omega_delta.norm(), omega_delta.normalized()));
             idx_c_space += 6;
         }
-        for (size_t i = 0; i < joints.size(); ++i) joints[i]->q() += q_delta[i];
+        for (size_t i = 0; i < joints.size(); ++i) joints[i]->q() += q_delta[i + idx_c_space];
 
-        calcFowardKinematics();
-        calcCenterOfMass();
+        // ioBody->calcFowardKinematics();
+        // ioBody->calcCenterOfMass();
+        calcFK();
 
         if(q_delta.squaredNorm() < ik_threshold) return true; // Completed
     }

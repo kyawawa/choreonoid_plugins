@@ -19,11 +19,12 @@ struct IKParam {
     cnoid::Position target_pos;
     Eigen::Vector3d target_trans;
     Eigen::Vector3d target_axisrot;
-
-    std::function<Eigen::VectorXd()> calcError;
-    // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-    // std::function<void(Eigen::MatrixXd&)> calcJacobian;
     std::function<Eigen::MatrixXd()> calcJacobian;
+    std::function<Eigen::VectorXd()> calcError; // IKTargetTypeを使えばcalcTargetみたいなのだけでOK?
+    // Limitation of choreonoid...
+    // std::function<void(Eigen::Ref<Eigen::MatrixXd>)> calcJacobian;
+    // std::function<void(Eigen::Ref<Eigen::VectorXd>)> calcError;
+
     // Eigen::DiagonalMatrix<double, 3> IK_weight;
     Eigen::VectorXd IK_weight;
 };
@@ -31,6 +32,7 @@ struct IKParam {
 bool solveWeightedWholebodyIK(cnoid::Position* position, // Floating base
                               std::vector<cnoid::LinkPtr>& joints, // Should use reference_wrapper and double?
                               const std::vector<IKParam>& ik_params,
+                              std::function<void()> calcFK, // Calculate forward kinematics and COM
                               const double ik_threshold = 1e-2,
                               const size_t max_iteration = 100,
                               const double damping = 1e-1);
