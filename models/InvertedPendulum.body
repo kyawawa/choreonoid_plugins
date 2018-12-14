@@ -1,0 +1,83 @@
+format: ChoreonoidBody
+formatVersion: 1.0
+angleUnit: degree
+name: InvertedPendulum
+
+links:
+  -
+    name: ROD
+    translation: [ 0, 0, 0.7 ]
+    rotation: [ 1, 0, 0, 90 ]
+    jointType: free
+    elements:
+      - 
+        type: RigidBody
+        centerOfMass: [ 0, 0, 0 ]
+        mass: 3.0
+        inertia: [
+          0.1, 0, 0,
+          0, 0.1, 0,
+          0, 0, 0.1 ]
+        elements:
+          Shape:
+            geometry:
+              type: Cylinder
+              height: 1
+              radius: 0.05
+            appearance: &BodyAppearance
+              material:
+                diffuseColor: [ 0, 0.6, 0 ]
+                specularColor: [ 0.2, 0.8, 0.2 ]
+                shininess: 0.6
+      -
+        type: AccelerationSensor
+        name: RodAccelSensor
+        id: 0
+      -
+        type: RateGyroSensor
+        name: RodGyro
+        id: 1
+  -
+    name: WHEEL
+    parent: ROD
+    translation: [ 0, -0.5, 0 ]
+    rotation: [ 1, 0, 0, 90 ]
+    jointType: revolute
+    jointAxis: -Y
+    maxJointVelocity: 90
+    jointId: 0
+    elements:
+      - 
+        type: RigidBody
+        centerOfMass: [ 0, 0, 0 ]
+        mass: 3.0
+        inertia: [
+          0.1, 0,   0,
+          0,   0.1, 0,
+          0,   0,   0.1 ]
+        elements:
+          Shape:
+            geometry:
+              type: Cylinder
+              height: 0.1
+              radius: 0.2
+            appearance: *BodyAppearance
+      - 
+        # Mark
+        type: Transform
+        translation: [ 0, 0, -0.15 ]
+        elements:
+          RigidBody:
+            centerOfMass: [ 0, 0, 0 ]
+            mass: 0
+            inertia: [
+              0, 0, 0,
+              0, 0, 0,
+              0, 0, 0 ]
+            elements:
+              Shape:
+                geometry:
+                  type: Cylinder
+                  height: 0.2
+                  radius: 0.02
+                appearance: *BodyAppearance
