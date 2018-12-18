@@ -74,7 +74,7 @@ void PDController::parseOptionString(SimpleControllerIO* io)
 
 bool PDController::initialize(SimpleControllerIO* io)
 {
-    Body::JointAccessor joint_list = io->body()->joints();
+    auto joint_list = io->body()->joints();
 
     actuation_joints_idx_.reserve(io->body()->numJoints());
     joints_.reserve(io->body()->numJoints());

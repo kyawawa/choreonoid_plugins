@@ -17,7 +17,7 @@ class SpringFootController : public SimpleController
 public:
     bool initialize(SimpleControllerIO* io) override
     {
-        Body::JointAccessor joint_list = io->body()->allJoints();
+        auto joint_list = io->body()->allJoints();
 
         size_t idx = 0;
         for (auto it = joint_list.begin(); it != joint_list.end(); ++it) {
