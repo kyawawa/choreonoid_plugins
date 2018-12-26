@@ -74,7 +74,7 @@ public:
     joint->u() = 
       P_joint * (q_ref - q)
       + D_joint * (dq_ref - dq)
-      + P_theta * (theta_ref - theta)
+      + *gain * (theta_ref - theta)
       + D_theta * (dtheta_ref - dtheta);
     std::cerr << *gain << " " << dq << " " << theta << " " << dtheta << " " << joint->u() << std::endl;
 
