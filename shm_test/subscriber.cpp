@@ -6,9 +6,9 @@ using namespace boost::interprocess;
 
 int main()
 {
-  shared_memory_object shdmem{open_or_create, "Boost", read_write};
+  shared_memory_object shdmem{open_or_create, "Gain", read_write};
   shdmem.truncate(1024);
-  mapped_region region2{shdmem, read_only};
-  int *i2 = static_cast<int*>(region2.get_address());
-  std::cout << *i2 << '\n';
+  mapped_region region{shdmem, read_only};
+  double *gain = static_cast<double*>(region.get_address());
+  std::cout << *gain << '\n';
 }
