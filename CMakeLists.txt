@@ -13,7 +13,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 include(FindPkgConfig)
 pkg_check_modules(cnoid-plugin REQUIRED choreonoid-body-plugin)
 pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
-pkg_check_modules(NLOPT REQUIRED nlopt)
 
 catkin_package(
   DEPENDS
@@ -22,13 +21,8 @@ catkin_package(
   LIBRARIES # TODO
 )
 
-include_directories(${cnoid-plugin_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${YAML_CPP_INCLUDEDIR} ${NLOPT_INCLUDE_DIRS})
-link_directories(${cnoid-plugin_LIBRARY_DIRS} ${catkin_LIBRARY_DIRS} ${NLOPT_LIBRARY_DIRS})
-
-### nlopt ###
-set(target NloptTutorial)
-add_executable(${target} src/tutorial.cpp)
-target_link_libraries(${target} ${NLOPT_LIBRARIES})
+include_directories(${cnoid-plugin_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${YAML_CPP_INCLUDEDIR})
+link_directories(${cnoid-plugin_LIBRARY_DIRS} ${catkin_LIBRARY_DIRS})
 
 ### Customizer ###
 set(target CnoidTrampolineCustomizer)
