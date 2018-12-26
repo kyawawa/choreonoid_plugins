@@ -10,5 +10,6 @@ int main()
   shdmem.truncate(1024);
   mapped_region region{shdmem, read_write};
   double *gain = static_cast<double*>(region.get_address());
-  std::cin >> *gain;
+  for (int i = 0; i < 4; i++)
+      std::cin >> gain[i];
 }

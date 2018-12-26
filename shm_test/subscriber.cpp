@@ -10,5 +10,7 @@ int main()
   shdmem.truncate(1024);
   mapped_region region{shdmem, read_only};
   double *gain = static_cast<double*>(region.get_address());
-  std::cout << *gain << '\n';
+  for (int i = 0; i < 4; i++)
+      std::cout << gain[i] << " ";
+  std::cout << std::endl;
 }
