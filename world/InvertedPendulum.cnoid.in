@@ -70,7 +70,7 @@ items:
               data: 
                 isNoDelayMode: true
                 controllerOptions: ""
-                controller: "../libCnoidPDController_InvertedPendulum.so"
+                controller: "@PROJECT_SOURCE_DIR@/libCnoidPDController_InvertedPendulum.so"
                 baseDirectory: "None"
                 reloading: true
         - 

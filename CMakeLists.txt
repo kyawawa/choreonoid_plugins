@@ -79,6 +79,9 @@ set_target_properties(${target} PROPERTIES
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
+### Inverted Pendulum ###
+configure_file(${PROJECT_SOURCE_DIR}/world/InvertedPendulum.cnoid.in ${PROJECT_SOURCE_DIR}/world/InvertedPendulum.cnoid @ONLY)
+
 ### cnoid ###
 configure_file(${PROJECT_SOURCE_DIR}/world/SampleRobotTrampoline.cnoid.in ${PROJECT_SOURCE_DIR}/world/SampleRobotTrampoline.cnoid @ONLY)
 
