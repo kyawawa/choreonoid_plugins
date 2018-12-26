@@ -53,6 +53,15 @@ set_target_properties(${target} PROPERTIES
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
+set(target CnoidPDController_InvertedPendulum)
+add_library(${target} SHARED controllers/PDController_InvertedPendulum.cpp)
+target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
+set_target_properties(${target} PROPERTIES
+  COMPILE_FLAG "-fPIC"
+  PREFIX "lib"
+  SUFFIX ".so"
+  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
+
 ### Plugin ###
 set(target CnoidResetSimulationPlugin)
 add_library(${target} SHARED plugins/ResetSimulationPlugin.cpp)
