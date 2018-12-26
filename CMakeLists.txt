@@ -75,7 +75,6 @@ set(target CnoidOptimizeGainPlugin)
 add_library(${target} SHARED plugins/OptimizeGainPlugin.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
 set_target_properties(${target} PROPERTIES
-  COMPILE_FLAG "-std=c++0x -lrt"
   PREFIX "lib"
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
