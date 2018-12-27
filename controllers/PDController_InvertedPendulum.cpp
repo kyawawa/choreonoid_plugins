@@ -20,8 +20,8 @@ using namespace cnoid;
 
 class PDController_InvertedPendulum : public SimpleController
 {
-  Link* wheel;
-  Link* rod;
+  LinkPtr wheel;
+  LinkPtr rod;
   double q_prev;
   
   AccelerationSensor* accelSensor;
