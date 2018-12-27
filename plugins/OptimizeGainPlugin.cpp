@@ -1,9 +1,9 @@
 // -*- mode: C++; coding: utf-8-unix; -*-
 
 /**
- * @file  ResetSimulation.cpp
- * @brief Reset the simulation at regular intervals
- * @author Tatsuya Ishikawa
+ * @file  OptimizeGainPlugin.cpp
+ * @brief Reset the simulation at regular intervals and optimize gains with nlopt
+ * @author Hiroki Takeda
  */
 
 #include <cnoid/Plugin>
