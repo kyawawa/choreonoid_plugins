@@ -15,6 +15,8 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 
+#include <string>
+
 using namespace boost::interprocess;
 using namespace cnoid;
 
@@ -45,18 +47,26 @@ private:
         if (simulator_item_) {
             if (simulator_item_->simulationTime() > reset_interval_) {
                 simulator_item_->startSimulation(true);
-                shared_memory_object shdmem{open_or_create, "Gain", read_write};
-                shdmem.truncate(1024);
-                mapped_region region{shdmem, read_write};
-                double *gain = static_cast<double*>(region.get_address());
+
+                shared_memory_object shm_gain{open_or_create, "Gain", read_write};
+                shm_gain.truncate(1024);
+                mapped_region region_gain{shm_gain, read_write};
+                double *gain = static_cast<double*>(region_gain.get_address());
                 for (int i = 0; i < 4; i++)
                     gain[i] = 0.01 * i;
+
+                shared_memory_object shm_eval{open_or_create, "Eval", read_write};
+                shm_eval.truncate(1024);
+                mapped_region region_eval{shm_eval, read_only};
+                double *eval = static_cast<double*>(region_eval.get_address());
+                for (int i = 0; i < 1; i++)
+                    MessageView::mainInstance()->putln(std::to_string(eval[i])); // 0.0が表示される？
             }
         } else {
             ItemPtr robot_item = RootItem::instance()->findItem("InvertedPendulum");
             simulator_item_ = SimulatorItem::findActiveSimulatorItemFor(robot_item);
             if (!simulator_item_) {
-                MessageView::mainInstance()->putln("[OptimizeGainPlugin] Simulator item can't be found. Stop reset_timer_");
+                // MessageView::mainInstance()->putln("[OptimizeGainPlugin] Simulator item can't be found. Stop reset_timer_");
                 // reset_timer_.stop();
             }
         }
