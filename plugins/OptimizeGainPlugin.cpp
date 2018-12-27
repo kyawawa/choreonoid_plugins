@@ -1,9 +1,9 @@
 // -*- mode: C++; coding: utf-8-unix; -*-
 
 /**
- * @file  ResetSimulation.cpp
- * @brief Reset the simulation at regular intervals
- * @author Tatsuya Ishikawa
+ * @file  OptimizeGainPlugin.cpp
+ * @brief Reset the simulation at regular intervals and optimize gains with nlopt
+ * @author Hiroki Takeda
  */
 
 #include <cnoid/Plugin>
@@ -46,7 +46,6 @@ private:
     {
         if (simulator_item_) {
             if (simulator_item_->simulationTime() > reset_interval_) {
-                simulator_item_->startSimulation(true);
 
                 shared_memory_object shm_gain{open_or_create, "Gain", read_write};
                 shm_gain.truncate(1024);
@@ -60,7 +59,9 @@ private:
                 mapped_region region_eval{shm_eval, read_only};
                 double *eval = static_cast<double*>(region_eval.get_address());
                 for (int i = 0; i < 1; i++)
-                    MessageView::mainInstance()->putln(std::to_string(eval[i])); // 0.0が表示される？
+                    MessageView::mainInstance()->putln(std::string("eval: ") + std::to_string(eval[i]));
+
+                simulator_item_->startSimulation(true);
             }
         } else {
             ItemPtr robot_item = RootItem::instance()->findItem("InvertedPendulum");
