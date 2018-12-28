@@ -14,6 +14,8 @@
 #include <cnoid/ToolBar>
 #include <cnoid/SpinBox>
 
+#include "../util/util.h"
+
 using namespace cnoid;
 
 class ResetSimulationPlugin : public Plugin
@@ -60,7 +62,7 @@ private:
             if (simulator_item_->simulationTime() > reset_interval_)
                 simulator_item_->startSimulation(true);
         } else {
-            simulator_item_ = dynamic_cast<SimulatorItem*>(RootItem::instance()->findItem("AISTSimulator"));
+            simulator_item_ = findSimulatorItem("AISTSimulator");
             if (!simulator_item_) {
                 MessageView::mainInstance()->putln("[ResetSimulationPlugin] Simulator item can't be found. Stop reset_timer_");
                 reset_timer_.stop();
