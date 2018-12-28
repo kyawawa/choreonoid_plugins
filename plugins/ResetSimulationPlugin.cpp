@@ -11,6 +11,8 @@
 #include <cnoid/SimulatorItem>
 #include <cnoid/MessageView>
 #include <cnoid/Timer>
+#include <cnoid/ToolBar>
+#include <cnoid/SpinBox>
 
 using namespace cnoid;
 
@@ -27,10 +29,26 @@ public:
 
     virtual bool initialize() override
     {
-        reset_timer_.sigTimeout().connect([this]() { resetSimulation(); });
+        reset_timer_.sigTimeout().connect([this]() { this->resetSimulation(); });
         reset_timer_.setInterval(100); // 100ms
-        reset_timer_.start();
-        reset_interval_ = std::numeric_limits<int>::max();
+        reset_interval_ = 3.0;
+
+        std::unique_ptr<ToolBar> bar = std::make_unique<ToolBar>("ResetSimulation");
+        bar->setVisibleByDefault(true);
+
+        ToolButton* button = bar->addToggleButton("ResetSimulation");
+        button->sigToggled().connect([this](bool checked) {
+                if (checked) this->reset_timer_.start();
+                else this->reset_timer_.stop();
+            });
+
+        std::unique_ptr<SpinBox> timeSpin = std::make_unique<SpinBox>();
+        timeSpin->setMaximum(1000000);
+        timeSpin->setValue(reset_interval_);
+        timeSpin->sigValueChanged().connect([this](const int value) { this->reset_interval_ = value; });
+        bar->addWidget(timeSpin.release());
+
+        addToolBar(bar.release());
         return true;
     }
 
@@ -42,8 +60,7 @@ private:
             if (simulator_item_->simulationTime() > reset_interval_)
                 simulator_item_->startSimulation(true);
         } else {
-            ItemPtr robot_item = RootItem::instance()->findItem("Robot");
-            simulator_item_ = SimulatorItem::findActiveSimulatorItemFor(robot_item);
+            simulator_item_ = dynamic_cast<SimulatorItem*>(RootItem::instance()->findItem("AISTSimulator"));
             if (!simulator_item_) {
                 MessageView::mainInstance()->putln("[ResetSimulationPlugin] Simulator item can't be found. Stop reset_timer_");
                 reset_timer_.stop();
