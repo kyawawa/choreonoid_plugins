@@ -36,6 +36,8 @@ class OptimizeGainPlugin : public Plugin
 
     virtual bool initialize() override
     {
+        shm_gain.remove(GAIN_SHM);
+        shm_eval.remove(EVAL_SHM);
         shm_gain = shared_memory_object{create_only, GAIN_SHM, read_write};
         shm_gain.truncate(1024);
         shm_eval = shared_memory_object{create_only, EVAL_SHM, read_write};
