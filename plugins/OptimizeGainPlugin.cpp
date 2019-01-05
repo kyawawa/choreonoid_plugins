@@ -6,16 +6,16 @@
  * @author Hiroki Takeda
  */
 
+#include <string>
+
 #include <cnoid/Plugin>
-#include <cnoid/RootItem>
 #include <cnoid/SimulatorItem>
 #include <cnoid/MessageView>
-#include <cnoid/Timer>
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 
-#include <string>
+#include "ResetSimulationPlugin.h"
 
 using namespace boost::interprocess;
 using namespace cnoid;
@@ -43,13 +43,11 @@ class OptimizeGainPlugin : public Plugin
         shm_eval = shared_memory_object{create_only, EVAL_SHM, read_write};
         shm_eval.truncate(1024);
 
-        cnoid::RootItem::instance()->sigItemAdded().connect([this](Item* _item) {
-                SimulatorItemPtr itemptr = dynamic_cast<cnoid::SimulatorItem*>(_item);
-                if (itemptr) {
-                    this->simulator_item_ = itemptr;
-                    this->simulator_item_->sigSimulationFinished().connect([this]() { this->evalNLOPT(); });
-                }
-            });
+        ResetSimulationPlugin* reset_simulation = findResetSimulation();
+        if (reset_simulation) {
+            reset_simulation->sigResetSimulation().connect([this]() { this->evalNLOPT(); });
+        }
+
         return true;
     }
 
