@@ -26,7 +26,7 @@ public:
     {
     }
 
-    virtual bool initialize() override;
+    bool initialize() override;
     cnoid::SignalProxy<void()> sigResetSimulation() { return sigResetSimulation_; }
 
 private:

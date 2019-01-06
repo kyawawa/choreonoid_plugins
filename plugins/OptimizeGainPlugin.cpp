@@ -34,7 +34,7 @@ class OptimizeGainPlugin : public Plugin
         require("Body");
     }
 
-    virtual bool initialize() override
+    bool initialize() override
     {
         shm_gain.remove(GAIN_SHM);
         shm_eval.remove(EVAL_SHM);
@@ -51,7 +51,7 @@ class OptimizeGainPlugin : public Plugin
         return true;
     }
 
-    virtual bool finalize() override
+    bool finalize() override
     {
         shm_gain.remove(GAIN_SHM);
         shm_eval.remove(EVAL_SHM);
