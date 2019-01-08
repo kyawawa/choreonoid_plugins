@@ -6,9 +6,12 @@
  * @author Tatsuya Ishikawa
  */
 
+#include <string>
+
 #include <cnoid/MessageView>
 #include <cnoid/ToolBar>
 #include <cnoid/SpinBox>
+#include <cnoid/TimeBar>
 
 #include "ResetSimulationPlugin.h"
 #include "../util/util.h"
@@ -35,6 +38,11 @@ bool ResetSimulationPlugin::initialize()
     timeSpin->setValue(reset_interval_);
     timeSpin->sigValueChanged().connect([this](const int value) { this->reset_interval_ = value; });
     bar->addWidget(timeSpin.release());
+
+    // TimeBar::instance()->sigTimeChanged().connect([this](double time) {
+    //         MessageView::mainInstance()->putln("Time changed: " + std::to_string(time));
+    //         return true;
+    //     });
 
     addToolBar(bar.release());
     return true;

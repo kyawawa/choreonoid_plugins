@@ -1,21 +1,21 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(choreonoid_plugins)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 find_package(catkin COMPONENTS
   hrpsys_choreonoid_tutorials
   hrpsys_ros_bridge_tutorials
   jvrc_models
   jsk_models
+  nlopt
   )
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-include(FindPkgConfig)
-pkg_check_modules(cnoid-plugin REQUIRED choreonoid-body-plugin)
-pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
-pkg_check_modules(NLOPT REQUIRED nlopt)
 
 catkin_package(
   DEPENDS
@@ -24,8 +24,16 @@ catkin_package(
   LIBRARIES # TODO
 )
 
-include_directories(${cnoid-plugin_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${YAML_CPP_INCLUDEDIR} ${NLOPT_INCLUDE_DIRS})
-link_directories(${cnoid-plugin_LIBRARY_DIRS} ${catkin_LIBRARY_DIRS} ${NLOPT_LIBRARY_DIRS})
+include(FindPkgConfig)
+pkg_check_modules(cnoid-plugin REQUIRED choreonoid-body-plugin)
+pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
+# pkg_check_modules(NLOPT QUIET nlopt)
+
+include_directories(${cnoid-plugin_INCLUDE_DIRS} ${YAML_CPP_INCLUDEDIR} ${NLOPT_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+link_directories(${cnoid-plugin_LIBRARY_DIRS} ${NLOPT_LIBRARY_DIRS} ${catkin_LIBRARY_DIRS})
+
+message("fuga ${NLOPT_INCLUDE_DIRS}")
+message("hoge ${catkin_INCLUDE_DIRS}")
 
 ### Customizer ###
 set(target CnoidTrampolineCustomizer)
