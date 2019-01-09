@@ -43,6 +43,7 @@ class OptimizeInvertedPendulum : public SimpleController
     AccelerationSensorPtr accel_sensor;
 
     double wheel_q_prev;
+    cnoid::Vector3 gyro_prev;
 
     GainWithCost opt_data;
     double goal_time;
@@ -61,6 +62,7 @@ class OptimizeInvertedPendulum : public SimpleController
         io->enableInput(accel_sensor);
         gyro_sensor = io->body()->findDevice<RateGyroSensor>("RodGyro");
         io->enableInput(gyro_sensor);
+        gyro_prev.setZero();
 
         wheel = io->body()->link("WHEEL");
         wheel->setActuationMode(Link::JOINT_TORQUE);
@@ -69,7 +71,7 @@ class OptimizeInvertedPendulum : public SimpleController
         rod = io->body()->link("ROD");
         io->enableInput(rod);
 
-        goal_time = 3.0;
+        goal_time = 10.0;
         count = 0;
         dt = io->timeStep();
         return true;
@@ -88,27 +90,31 @@ class OptimizeInvertedPendulum : public SimpleController
     bool control() override
     {
         wheel->dq() = (wheel->q() - wheel_q_prev) / dt;
-        wheel_q_prev = wheel->q();
         // MessageView::mainInstance()->putln("q: " + std::to_string(wheel->q()));
         // MessageView::mainInstance()->putln("q_prev: " + std::to_string(wheel_q_prev));
         // MessageView::mainInstance()->putln("dq: " + std::to_string(wheel->dq()));
         // std::cerr << "q: " << wheel->q() << ", q_prev: " << wheel_q_prev << ", dq: " << wheel->dq() << std::endl;
         // std::cerr << "gyro: " << gyro_sensor->w().transpose() << std::endl;
+        // std::cerr << rod->p().transpose() << std::endl;
         wheel->u() = gyro_sensor->w().sum() * opt_data.gains[0] + wheel->dq() * opt_data.gains[1];
         // wheel->u() = gyro_sensor->w().sum() * 1.0 + wheel->dq() * opt_data.gains[1];
         // wheel->u() = gyro_sensor->w().sum() * 1.0 + wheel->dq() * 1.0;
+
         writeData();
+
+        wheel_q_prev = wheel->q();
+        gyro_prev = gyro_sensor->w();
         ++count;
         return 0;
     }
 
-    // void setGoalTime(const double _time) { goal_time = _time; }
-    // void setGain(const std::vector<double>& _gain) { gains = _gain; }
     int calcIsFinished()
     {
         if (opt_data.is_finished == 0) {
-            if (std::abs(accel_sensor->dv().sum()) > 400.0) {
-                MessageView::mainInstance()->putln("dv: " + std::to_string(accel_sensor->dv().sum()));
+            // if (std::abs(accel_sensor->dv().sum()) > 400.0) {
+            // std::cerr << std::abs(((gyro_sensor->w() - gyro_prev) / dt).sum()) << std::endl;
+            if ((gyro_sensor->w() - gyro_prev).cwiseAbs().sum() / dt > 200.0) {
+                // MessageView::mainInstance()->putln("dv: " + std::to_string(accel_sensor->dv().sum()));
                 opt_data.is_finished = -1;
             }
             // else if (wheel->dq() + gyro_sensor->w().sum() < 0.01) opt_data.is_finished = 1;
@@ -122,7 +128,7 @@ class OptimizeInvertedPendulum : public SimpleController
         else if (count * dt < goal_time) {
             return count * dt;
         } else {
-            return goal_time + wheel->dq() + gyro_sensor->w().sum();
+            return goal_time + std::abs(wheel->dq()) + gyro_sensor->w().cwiseAbs().sum();
         }
     }
 

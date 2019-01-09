@@ -10,6 +10,7 @@
 #include <vector>
 #include <thread>
 #include <mutex>
+#include <random>
 #include <iostream>
 
 #include <cnoid/Plugin>
@@ -18,14 +19,10 @@
 #include <cnoid/TimeBar>
 #include <cnoid/RootItem>
 #include <cnoid/BodyItem>
-#include <cnoid/SimpleControllerItem>
-#include <cnoid/WorldItem>
 #include <cnoid/SimulatorItem>
 #include <cnoid/SimulationBar>
 #include <cnoid/ItemTreeView>
 #include <cnoid/Timer>
-
-#include <QThread>
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
@@ -51,6 +48,9 @@ double costFuncWrapper(const std::vector<double> &gains, std::vector<double> &gr
 
 class OptimizeGainPlugin : public Plugin
 {
+    std::mt19937 mt{};
+    std::uniform_real_distribution<double> uni_dist{-40, 40};
+
     SimulatorItemPtr simulator_item_;
     double goal_time;
     BodyItemPtr body_item;
@@ -74,6 +74,8 @@ class OptimizeGainPlugin : public Plugin
 
     bool initialize() override
     {
+        mt = std::mt19937{std::random_device{}()};
+
         shm_gain.remove(GAIN_SHM);
         shm_gain = shared_memory_object{create_only, GAIN_SHM, read_write};
         shm_gain.truncate(1024);
@@ -81,7 +83,7 @@ class OptimizeGainPlugin : public Plugin
         GainWithCost* shm_data = static_cast<GainWithCost*>(region_gain.get_address());
         std::memcpy(shm_data, &opt_data, sizeof(opt_data));
 
-        goal_time = 3.0;
+        goal_time = 10.0;
         opt = nlopt::opt(nlopt::GN_ISRES, NUM_PARAMS);
         // opt = nlopt::opt(nlopt::LN_PRAXIS, NUM_PARAMS);
 
@@ -103,8 +105,9 @@ class OptimizeGainPlugin : public Plugin
                             mtx.lock();
                             if (will_reset_simulation) {
                                 putMessage("Sig Start");
-                                will_reset_simulation = false;
                                 this->simulator_item_->startSimulation(true);
+                                addExternalForceToRod(uni_dist(mt));
+                                will_reset_simulation = false;
                             }
                             mtx.unlock();
                         });
@@ -124,12 +127,19 @@ class OptimizeGainPlugin : public Plugin
         ToolButton* button = bar->addToggleButton("StartOptimization");
         button->sigToggled().connect([this](bool checked) {
                 if (checked) {
-                    if (!simulator_item_->isActive()) SimulationBar::instance()->startSimulation(true);
+                    body_item = ItemTreeView::instance()->selectedItem<BodyItem>();
+                    if (!body_item || body_item->body()->isStaticModel()) {
+                        putMessage("Toggle button with checking robot body item");
+                        return;
+                    }
+
+                    if (!simulator_item_->isActive()) {
+                        SimulationBar::instance()->startSimulation(true);
+                        addExternalForceToRod(uni_dist(mt));
+                    }
                     this->reset_timer_.start();
                     opt_thread = std::thread([this]() { this->runNLOPT(); });
                     // if (!simulator_item_->isActive()) SimulationBar::instance()->startSimulation(true);
-                    // body_item = ItemTreeView::instance()->selectedItem<BodyItem>();
-                    // if (body_item) {
                     //     if (findControllerItem()) {
                     //         opt_thread = std::thread([this]() { this->runNLOPT(); });
                     //         // manage_nlopt = std::thread([this]() {
@@ -140,10 +150,9 @@ class OptimizeGainPlugin : public Plugin
                     //         //     });
                     //     }
                     // }
-                    // putMessage("Toggle button with checking robot body item");
                 } else {
                     this->reset_timer_.stop();
-                    opt_thread.detach();
+                    if (opt_thread.joinable()) opt_thread.detach();
                 }
             });
         // button->sigToggled().connect([this](bool checked) {
@@ -175,15 +184,21 @@ class OptimizeGainPlugin : public Plugin
 
     cnoid::SignalProxy<void()> sigRequestResetSimulation() { return sigRequestResetSimulation_; }
 
+    void addExternalForceToRod(const double force_x)
+    {
+        const cnoid::Vector3 force(force_x, 0, 0);
+        simulator_item_->setExternalForce(body_item, body_item->body()->link("ROD"), cnoid::Vector3::Zero(), force, 0.1);
+        // body_item->body()->link("ROD")->addExternalForce(force, cnoid::Vector3::Zero());
+    }
+
     double costFunc(const std::vector<double> &gains, std::vector<double> &grad, void *data)
     {
         GainWithCost* shm_data = static_cast<GainWithCost*>(region_gain.get_address());
         shm_data->gains[0] = gains[0];
         shm_data->gains[1] = gains[1];
-        sigRequestResetSimulation_();
         shm_data->is_finished = 0;
+        sigRequestResetSimulation_();
 
-        // TODO: wait start simulation
         while ((simulator_item_->simulationTime() < goal_time && shm_data->is_finished == 0) || will_reset_simulation) {
             // putMessage("cost: " + std::to_string(shm_data->cost));
             std::this_thread::sleep_for(std::chrono::microseconds(2));

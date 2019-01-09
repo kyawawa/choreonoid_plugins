@@ -45,17 +45,17 @@ items:
           data:
             modelFile: "../models/InvertedPendulum.body"
             currentBaseLink: "ROD"
-            rootPosition: [ 0, 0, 0.6534 ]
+            rootPosition: [ 0, 0, 0.6981 ]
             rootAttitude: [
-              0.910586, -0.413298, 0.004187,
-              0.003844, -0.001661, -0.999991,
-              0.413301, 0.910594, 0.000077]
+              1.0, 0, 0,
+              0,   0, -1.0,
+              0, 1.0, 0]
             jointPositions: [ 0 ]
-            initialRootPosition: [ 0, 0, 0.6534 ]
+            initialRootPosition: [ 0, 0, 0.6981 ]
             initialRootAttitude: [
-              0.910586, -0.413298, 0.004187,
-              0.003844, -0.001661, -0.999991,
-              0.413301, 0.910594, 0.000077]
+              1.0, 0, 0,
+              0,   0, -1.0,
+              0, 1.0, 0]
             initialJointPositions: [ 0 ]
             zmp: [ 0, 0, 0 ]
             collisionDetection: true
