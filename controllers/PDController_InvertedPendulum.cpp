@@ -15,6 +15,8 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 
+#include <cnoid/MessageView>
+
 using namespace boost::interprocess;
 using namespace cnoid;
 
@@ -23,14 +25,14 @@ class PDController_InvertedPendulum : public SimpleController
   LinkPtr wheel;
   LinkPtr rod;
   double q_prev;
-  
+
   AccelerationSensor* accelSensor;
   double theta_prev;
 
   double dt;
 
   double rod_rot_q_sum;
-  
+
 public:
   bool initialize(SimpleControllerIO* io) override
   {
@@ -69,14 +71,14 @@ public:
     Matrix3 A; A << 1, 0, 0, 0, 0, 1, 0,-1, 0;
     Matrix3 R = rod->rotation();
     rod_rot_q_sum += AngleAxis(A*R).angle();
-    
-    
+
+
     shared_memory_object shm_gain{open_or_create, "Gain", read_write};
     shm_gain.truncate(1024);
     mapped_region region_gain{shm_gain, read_only};
     double *gain = static_cast<double*>(region_gain.get_address());
-    
-    wheel->u() = 
+
+    wheel->u() =
       gain[0] * (q_ref - q)
       + gain[1] * (dq_ref - dq)
       + gain[2] * (theta_ref - theta)
@@ -99,5 +101,3 @@ public:
 };
 
 CNOID_IMPLEMENT_SIMPLE_CONTROLLER_FACTORY(PDController_InvertedPendulum)
-
-

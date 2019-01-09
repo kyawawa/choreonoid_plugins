@@ -1,84 +1,84 @@
-items: 
+items:
   id: 0
   name: "Root"
   plugin: Base
   class: RootItem
-  children: 
-    - 
+  children:
+    -
       id: 1
       name: "World"
       plugin: Body
       class: WorldItem
-      data: 
+      data:
         collisionDetection: false
         collisionDetector: AISTCollisionDetector
         materialTableFile: "${SHARE}/default/materials.yaml"
-      children: 
-        - 
+      children:
+        -
           id: 2
           name: "Floor"
           plugin: Body
           class: BodyItem
-          data: 
+          data:
             modelFile: "${SHARE}/model/misc/floor.body"
             currentBaseLink: "Floor"
             rootPosition: [ 0, 0, -0.1 ]
-            rootAttitude: [ 
-              1, 0, 0, 
-              0, 1, 0, 
+            rootAttitude: [
+              1, 0, 0,
+              0, 1, 0,
               0, 0, 1 ]
             jointPositions: [  ]
             initialRootPosition: [ 0, 0, -0.1 ]
-            initialRootAttitude: [ 
-              1, 0, 0, 
-              0, 1, 0, 
+            initialRootAttitude: [
+              1, 0, 0,
+              0, 1, 0,
               0, 0, 1 ]
             zmp: [ 0, 0, 0 ]
             collisionDetection: true
             selfCollisionDetection: false
             isEditable: false
-        - 
+        -
           id: 3
           name: "InvertedPendulum"
           plugin: Body
           class: BodyItem
-          data: 
+          data:
             modelFile: "../models/InvertedPendulum.body"
             currentBaseLink: "ROD"
-            rootPosition: [ 0, 0, 0.8 ]
-            rootAttitude: [ 
-              1, 0, 0, 
-              0, 6.123234e-17, -1, 
-              0, 1, 6.123234e-17 ]
+            rootPosition: [ 0, 0, 0.6982 ]
+            rootAttitude: [
+              0.920527242, -0.39065636, 0.00414781292,
+              0.00385224204, -0.00154018607, -0.999991394,
+              0.390659386, 0.920535299, 8.71196124e-05 ]
             jointPositions: [ 0 ]
-            initialRootPosition: [ 0, 0, 0.8 ]
-            initialRootAttitude: [ 
-              1, 0, 0, 
-              0, 2.22044605e-16, -1, 
-              0, 1, 2.22044605e-16 ]
+            initialRootPosition: [ 0, 0, 0.6982 ]
+            initialRootAttitude: [
+              0.920527242, -0.39065636, 0.00414781292,
+              0.00385224204, -0.00154018607, -0.999991394,
+              0.390659386, 0.920535299, 8.71196124e-05 ]
             initialJointPositions: [ 0 ]
             zmp: [ 0, 0, 0 ]
             collisionDetection: true
             selfCollisionDetection: false
             isEditable: true
-          children: 
-            - 
+          children:
+            -
               id: 4
               name: "SimpleController"
               plugin: Body
               class: SimpleControllerItem
-              data: 
+              data:
                 isNoDelayMode: true
                 controllerOptions: ""
-                controller: "@PROJECT_SOURCE_DIR@/libCnoidPDController_InvertedPendulum.so"
+                controller: "@PROJECT_SOURCE_DIR@/libCnoidOptimizeInvertedPendulum.so"
                 baseDirectory: "None"
                 reloading: true
-        - 
+        -
           id: 5
           name: "AISTSimulator"
           plugin: Body
           class: AISTSimulatorItem
-          data: 
+          data:
             timestep: 0.001
             realtimeSync: true
             recording: "full"
@@ -103,32 +103,32 @@ items:
             kinematicWalking: false
             2Dmode: false
             oldAccelSensorMode: false
-views: 
-  - 
+views:
+  -
     id: 0
     plugin: Base
     class: ItemPropertyView
     mounted: true
-  - 
+  -
     id: 1
     plugin: Base
     class: ItemTreeView
     mounted: true
-    state: 
+    state:
       selected: [ 1 ]
-      checked: [ 1, 2, 3, 4, 5 ]
+      checked: [ 1, 2, 3, 4]
       expanded: [ 1, 3, 4 ]
-  - 
+  -
     id: 2
     plugin: Base
     class: MessageView
     mounted: true
-  - 
+  -
     id: 3
     plugin: Base
     class: SceneView
     mounted: true
-    state: 
+    state:
       editMode: false
       viewpointControlMode: thirdPerson
       collisionLines: false
@@ -160,8 +160,8 @@ views:
       enableNewDisplayListDoubleRendering: false
       useBufferForPicking: true
       upsideDown: false
-      cameras: 
-        - 
+      cameras:
+        -
           camera: [ System, Perspective ]
           isCurrent: true
           fieldOfView: 0.698132
@@ -170,7 +170,7 @@ views:
           eye: [ 0.431358564, 7.54482513, 1.81703404 ]
           direction: [ -0.134477366, -0.974366545, -0.180348759 ]
           up: [ -0.0246571359, -0.178655256, 0.983602727 ]
-        - 
+        -
           camera: [ System, Orthographic ]
           orthoHeight: 20
           near: 0.01
@@ -180,25 +180,25 @@ views:
       xzgridColor: [ 0.899999976, 0.899999976, 0.899999976, 1 ]
       yzgridColor: [ 0.899999976, 0.899999976, 0.899999976, 1 ]
       dedicatedItemTreeViewChecks: false
-  - 
+  -
     id: 4
     plugin: Body
     class: BodyLinkView
     mounted: true
-    state: 
+    state:
       showRotationMatrix: false
-  - 
+  -
     id: 5
     name: "Body State"
     plugin: Body
     class: BodyStateView
     mounted: true
-  - 
+  -
     id: 6
     plugin: Body
     class: JointSliderView
     mounted: true
-    state: 
+    state:
       showAllJoints: true
       jointId: false
       name: true
@@ -207,26 +207,26 @@ views:
       slider: true
       labelOnLeft: true
       currentBodyItem: 3
-  - 
+  -
     id: 7
     plugin: Body
     class: LinkSelectionView
     mounted: true
-    state: 
+    state:
       listingMode: "Link List"
       currentBodyItem: 3
-  - 
+  -
     id: 8
     plugin: OpenRTM
     class: RTSNameServerView
     mounted: true
-  - 
+  -
     id: 9
     plugin: Python
     class: PythonConsoleView
     mounted: true
-toolbars: 
-  "TimeBar": 
+toolbars:
+  "TimeBar":
     minTime: 0
     maxTime: 30
     frameRate: 100
@@ -236,7 +236,7 @@ toolbars:
     speedScale: 1
     syncToOngoingUpdates: true
     autoExpansion: true
-  "KinematicsBar": 
+  "KinematicsBar":
     mode: AUTO
     enablePositionDragger: true
     penetrationBlock: false
@@ -244,11 +244,11 @@ toolbars:
     snapDistance: 0.025
     penetrationBlockDepth: 0.0005
     lazyCollisionDetectionMode: true
-  "BodyBar": 
+  "BodyBar":
     current: 3
-  "LeggedBodyBar": 
+  "LeggedBodyBar":
     stanceWidth: 0.15
-  "BodyMotionGenerationBar": 
+  "BodyMotionGenerationBar":
     autoGenerationForNewBody: true
     balancer: false
     autoGeneration: false
@@ -281,23 +281,23 @@ toolbars:
     waistHeightRelaxation: false
     gravity: 9.8
     dynamicsTimeRatio: 1
-Body: 
-  "BodyMotionEngine": 
+Body:
+  "BodyMotionEngine":
     updateJointVelocities: false
-  "EditableSceneBody": 
-    editableSceneBodies: 
-      - 
+  "EditableSceneBody":
+    editableSceneBodies:
+      -
         bodyItem: 2
         showCenterOfMass: false
         showPpcom: false
         showZmp: false
-      - 
+      -
         bodyItem: 3
         showCenterOfMass: false
         showPpcom: false
         showZmp: false
     staticModelEditing: true
-  "KinematicFaultChecker": 
+  "KinematicFaultChecker":
     checkJointPositions: true
     angleMargin: 0
     translationMargin: 0
@@ -306,55 +306,55 @@ Body:
     targetJoints: all
     checkSelfCollisions: true
     onlyTimeBarRange: false
-OpenRTM: 
+OpenRTM:
   "deleteUnmanagedRTCsOnStartingSimulation": false
-viewAreas: 
-  - 
+viewAreas:
+  -
     type: embedded
     tabs: true
-    contents: 
+    contents:
       type: splitter
       orientation: horizontal
       sizes: [ 423, 2066 ]
-      children: 
-        - 
+      children:
+        -
           type: splitter
           orientation: vertical
           sizes: [ 757, 756 ]
-          children: 
-            - 
+          children:
+            -
               type: pane
               views: [ 1 ]
               current: 1
-            - 
+            -
               type: pane
               views: [ 0, 7, 8 ]
               current: 0
-        - 
+        -
           type: splitter
           orientation: vertical
           sizes: [ 1081, 432 ]
-          children: 
-            - 
+          children:
+            -
               type: splitter
               orientation: horizontal
               sizes: [ 895, 1165 ]
-              children: 
-                - 
+              children:
+                -
                   type: pane
                   views: [ 4, 6 ]
                   current: 4
-                - 
+                -
                   type: pane
                   views: [ 3 ]
                   current: 3
-            - 
+            -
               type: pane
               views: [ 2, 9, 5 ]
-              current: 5
-layoutOfToolBars: 
-  rows: 
-    - 
+              current: 2
+layoutOfToolBars:
+  rows:
+    -
       - { name: "FileBar", x: 0, priority: 0 }
       - { name: "ScriptBar", x: 47, priority: 0 }
       - { name: "TimeBar", x: 94, priority: 0 }
@@ -364,3 +364,5 @@ layoutOfToolBars:
       - { name: "BodyBar", x: 1865, priority: 0 }
       - { name: "KinematicsBar", x: 2125, priority: 0 }
       - { name: "BodyMotionGenerationBar", x: 2359, priority: 0 }
+    -
+      - { name: "OptimizeGain", x: 0, priority: 0 }
