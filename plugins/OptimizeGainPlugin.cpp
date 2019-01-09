@@ -46,7 +46,6 @@ double costFuncWrapper(const std::vector<double> &gains, std::vector<double> &gr
 class OptimizeGainPlugin : public Plugin
 {
     SimulatorItemPtr simulator_item_;
-    // cnoid::OptimizeInvertedPendulumPtr inverted_pendulum_;
     double goal_time;
     BodyItemPtr body_item;
 
@@ -54,11 +53,11 @@ class OptimizeGainPlugin : public Plugin
     shared_memory_object shm_gain{};
     mapped_region region_gain{};
 
-    // std::vector<double> opt_gains{NUM_PARAMS};
     GainWithCost opt_data;
     nlopt::opt opt{};
     std::thread opt_thread;
-    // std::thread manage_nlopt;
+
+    cnoid::Signal<void()> sigRequestResetSimulation_;
 
   public:
     OptimizeGainPlugin() : Plugin("OptimizeGain")
@@ -72,7 +71,7 @@ class OptimizeGainPlugin : public Plugin
         shm_gain.truncate(1024);
         region_gain = mapped_region{shm_gain, read_write};
         GainWithCost* shm_data = static_cast<GainWithCost*>(region_gain.get_address());
-        *shm_data = opt_data;
+        std::memcpy(shm_data, &opt_data, sizeof(opt_data));
 
         goal_time = 3.0;
         opt = nlopt::opt(nlopt::GN_ISRES, NUM_PARAMS);
@@ -89,7 +88,10 @@ class OptimizeGainPlugin : public Plugin
 
         cnoid::RootItem::instance()->sigItemAdded().connect([this](Item* _item) {
                 SimulatorItemPtr itemptr = dynamic_cast<cnoid::SimulatorItem*>(_item);
-                if (itemptr) this->simulator_item_ = itemptr;
+                if (itemptr) {
+                    this->simulator_item_ = itemptr;
+                    sigRequestResetSimulation_.connect([this]() { this->simulator_item_->startSimulation(true); });
+                }
             });
 
         std::unique_ptr<ToolBar> bar = std::make_unique<ToolBar>(this->name());
@@ -142,6 +144,8 @@ class OptimizeGainPlugin : public Plugin
         return true;
     }
 
+    cnoid::SignalProxy<void()> sigRequestResetSimulation() { return sigRequestResetSimulation_; }
+
     // bool findControllerItem() {
     //     Item* child = body_item->childItem();
     //     while (child) {
@@ -165,9 +169,15 @@ class OptimizeGainPlugin : public Plugin
         GainWithCost* shm_data = static_cast<GainWithCost*>(region_gain.get_address());
         shm_data->gains[0] = gains[0];
         shm_data->gains[1] = gains[1];
-        simulator_item_->startSimulation(true);
+        // simulator_item_->startSimulation(true);
+        sigRequestResetSimulation_();
 
-        while (simulator_item_->simulationTime() < goal_time) { // && !shm_data->is_failed) {
+        if (shm_data->is_failed) {
+            putMessage("failed");
+        } else {
+            putMessage("not failed");
+        }
+        while (simulator_item_->simulationTime() < goal_time && !(shm_data->is_failed)) {
             std::this_thread::sleep_for(std::chrono::microseconds(20));
         }
 

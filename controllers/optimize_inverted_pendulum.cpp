@@ -20,6 +20,7 @@ using namespace boost::interprocess;
 
 namespace {
 constexpr size_t NUM_PARAMS = 2;
+constexpr double FAIL_PENALTY = 100;
 }
 
 namespace cnoid {
@@ -38,11 +39,11 @@ class OptimizeInvertedPendulum : public SimpleController
     LinkPtr rod;
     RateGyroSensorPtr gyro_sensor;
     AccelerationSensorPtr accel_sensor;
-    std::vector<double> gains{NUM_PARAMS};
+
+    GainWithCost opt_data;
     double goal_time;
     unsigned int count;
     double dt;
-    bool is_failed;
 
     shared_memory_object shm_gain{};
     const char* GAIN_SHM = "Gain";
@@ -63,13 +64,9 @@ class OptimizeInvertedPendulum : public SimpleController
         rod = io->body()->link("ROD");
         io->enableInput(rod);
 
-        gains[0] = 1.0;
-        gains[1] = 0.0;
-
         goal_time = 3.0;
         count = 0;
         dt = io->timeStep();
-        is_failed = false;
         return true;
     }
 
@@ -80,7 +77,7 @@ class OptimizeInvertedPendulum : public SimpleController
 
     bool control() override
     {
-        wheel->u() = gyro_sensor->w().sum() * gains[0] + wheel->dq() * gains[1];
+        wheel->u() = gyro_sensor->w().sum() * opt_data.gains[0] + wheel->dq() * opt_data.gains[1];
         writeData();
         ++count;
         return 0;
@@ -88,15 +85,15 @@ class OptimizeInvertedPendulum : public SimpleController
 
     // void setGoalTime(const double _time) { goal_time = _time; }
     // void setGain(const std::vector<double>& _gain) { gains = _gain; }
-    bool calcIsFailed() const
+    bool calcIsFailed()
     {
-        return std::abs(accel_sensor->dv().sum()) > 500.0;
+        opt_data.is_failed = (opt_data.is_failed || std::abs(accel_sensor->dv().sum()) > 500.0);
+        return opt_data.is_failed;
     }
 
     double calcCost() const
     {
-        // MessageView::mainInstance()->putln("Calc Cost: " + std::to_string(count * dt));
-        // std::cerr << "Calc Cost " << count * dt << std::endl;
+        if (opt_data.is_failed) return count * dt + FAIL_PENALTY;
         if (count * dt < goal_time) {
             return count * dt;
         } else {
@@ -108,8 +105,8 @@ class OptimizeInvertedPendulum : public SimpleController
     {
         mapped_region region_gain{shm_gain, read_only};
         GainWithCost* data = static_cast<GainWithCost*>(region_gain.get_address());
-        gains[0] = data->gains[0];
-        gains[1] = data->gains[1];
+        opt_data.gains[0] = data->gains[0];
+        opt_data.gains[1] = data->gains[1];
     }
 
     void writeData()
