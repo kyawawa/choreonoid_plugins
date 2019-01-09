@@ -20,7 +20,7 @@ items:
           plugin: Body
           class: BodyItem
           data:
-            modelFile: "${SHARE}/model/misc/floor.body"
+            modelFile: "../models/big_floor.body"
             currentBaseLink: "Floor"
             rootPosition: [ 0, 0, -0.1 ]
             rootAttitude: [
@@ -45,17 +45,17 @@ items:
           data:
             modelFile: "../models/InvertedPendulum.body"
             currentBaseLink: "ROD"
-            rootPosition: [ 0, 0, 0.6982 ]
+            rootPosition: [ 0, 0, 0.6534 ]
             rootAttitude: [
-              0.920527242, -0.39065636, 0.00414781292,
-              0.00385224204, -0.00154018607, -0.999991394,
-              0.390659386, 0.920535299, 8.71196124e-05 ]
+              0.910586, -0.413298, 0.004187,
+              0.003844, -0.001661, -0.999991,
+              0.413301, 0.910594, 0.000077]
             jointPositions: [ 0 ]
-            initialRootPosition: [ 0, 0, 0.6982 ]
+            initialRootPosition: [ 0, 0, 0.6534 ]
             initialRootAttitude: [
-              0.920527242, -0.39065636, 0.00414781292,
-              0.00385224204, -0.00154018607, -0.999991394,
-              0.390659386, 0.920535299, 8.71196124e-05 ]
+              0.910586, -0.413298, 0.004187,
+              0.003844, -0.001661, -0.999991,
+              0.413301, 0.910594, 0.000077]
             initialJointPositions: [ 0 ]
             zmp: [ 0, 0, 0 ]
             collisionDetection: true

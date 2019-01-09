@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <mutex>
+#include <iostream>
 
 #include <cnoid/Plugin>
 #include <cnoid/MessageView>
@@ -21,6 +23,9 @@
 #include <cnoid/SimulatorItem>
 #include <cnoid/SimulationBar>
 #include <cnoid/ItemTreeView>
+#include <cnoid/Timer>
+
+#include <QThread>
 
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
@@ -37,8 +42,9 @@ constexpr size_t NUM_PARAMS = 2;
 struct GainWithCost {
     std::vector<double> gains{1.0, 0.0};
     double cost{0};
-    bool is_failed{false};
+    int is_finished{0};
 };
+std::mutex mtx;
 }
 
 double costFuncWrapper(const std::vector<double> &gains, std::vector<double> &grad, void *data);
@@ -57,6 +63,8 @@ class OptimizeGainPlugin : public Plugin
     nlopt::opt opt{};
     std::thread opt_thread;
 
+    cnoid::Timer reset_timer_;
+    bool will_reset_simulation = false;
     cnoid::Signal<void()> sigRequestResetSimulation_;
 
   public:
@@ -75,22 +83,38 @@ class OptimizeGainPlugin : public Plugin
 
         goal_time = 3.0;
         opt = nlopt::opt(nlopt::GN_ISRES, NUM_PARAMS);
-        // opt_gains = {1.0, 0.0};
-        // opt_data.gains = {1.0, 0.0};
+        // opt = nlopt::opt(nlopt::LN_PRAXIS, NUM_PARAMS);
 
-        std::vector<double> lb = {-100, -100};
+        std::vector<double> lb = {-30, -30};
         opt.set_lower_bounds(lb);
-        std::vector<double> ub = {100, 100};
+        std::vector<double> ub = {30, 30};
         opt.set_upper_bounds(ub);
 
-        opt.set_xtol_rel(1e-4);
+        // opt.set_xtol_rel(1e-10);
+        // opt.set_ftol_abs(1e-10);
         opt.set_min_objective(costFuncWrapper, this);
+        opt.set_stopval(5.0);
 
         cnoid::RootItem::instance()->sigItemAdded().connect([this](Item* _item) {
                 SimulatorItemPtr itemptr = dynamic_cast<cnoid::SimulatorItem*>(_item);
                 if (itemptr) {
                     this->simulator_item_ = itemptr;
-                    sigRequestResetSimulation_.connect([this]() { this->simulator_item_->startSimulation(true); });
+                    reset_timer_.sigTimeout().connect([this]() {
+                            mtx.lock();
+                            if (will_reset_simulation) {
+                                putMessage("Sig Start");
+                                will_reset_simulation = false;
+                                this->simulator_item_->startSimulation(true);
+                            }
+                            mtx.unlock();
+                        });
+                    reset_timer_.setInterval(20); // 20ms
+                    sigRequestResetSimulation_.connect([this]() {
+                            putMessage("Sig Reset");
+                            mtx.lock();
+                            will_reset_simulation = true;
+                            mtx.unlock();
+                        });
                 }
             });
 
@@ -101,6 +125,7 @@ class OptimizeGainPlugin : public Plugin
         button->sigToggled().connect([this](bool checked) {
                 if (checked) {
                     if (!simulator_item_->isActive()) SimulationBar::instance()->startSimulation(true);
+                    this->reset_timer_.start();
                     opt_thread = std::thread([this]() { this->runNLOPT(); });
                     // if (!simulator_item_->isActive()) SimulationBar::instance()->startSimulation(true);
                     // body_item = ItemTreeView::instance()->selectedItem<BodyItem>();
@@ -116,7 +141,10 @@ class OptimizeGainPlugin : public Plugin
                     //     }
                     // }
                     // putMessage("Toggle button with checking robot body item");
-                } else opt_thread.detach();
+                } else {
+                    this->reset_timer_.stop();
+                    opt_thread.detach();
+                }
             });
         // button->sigToggled().connect([this](bool checked) {
         //         if (checked) {
@@ -141,48 +169,30 @@ class OptimizeGainPlugin : public Plugin
     bool finalize() override
     {
         shm_gain.remove(GAIN_SHM);
+        opt_thread.detach();
         return true;
     }
 
     cnoid::SignalProxy<void()> sigRequestResetSimulation() { return sigRequestResetSimulation_; }
-
-    // bool findControllerItem() {
-    //     Item* child = body_item->childItem();
-    //     while (child) {
-    //         SimpleControllerItemPtr controller_item = dynamic_cast<SimpleControllerItem*>(child);
-    //         if (controller_item) {
-    //             auto controller_ptr = dynamic_cast<OptimizeInvertedPendulum*>(controller_item->controller());
-    //             if (controller_ptr) {
-    //                 // Initialize NLOPT
-    //                 this->inverted_pendulum_ = controller_ptr;
-    //                 return true;
-    //             }
-    //         }
-    //         child = child->nextItem();
-    //     }
-    //     putMessage("Can't find OptimizeInvertedPendulum controller");
-    //     return false;
-    // }
 
     double costFunc(const std::vector<double> &gains, std::vector<double> &grad, void *data)
     {
         GainWithCost* shm_data = static_cast<GainWithCost*>(region_gain.get_address());
         shm_data->gains[0] = gains[0];
         shm_data->gains[1] = gains[1];
-        // simulator_item_->startSimulation(true);
         sigRequestResetSimulation_();
+        shm_data->is_finished = 0;
 
-        if (shm_data->is_failed) {
-            putMessage("failed");
-        } else {
-            putMessage("not failed");
+        // TODO: wait start simulation
+        while ((simulator_item_->simulationTime() < goal_time && shm_data->is_finished == 0) || will_reset_simulation) {
+            // putMessage("cost: " + std::to_string(shm_data->cost));
+            std::this_thread::sleep_for(std::chrono::microseconds(2));
         }
-        while (simulator_item_->simulationTime() < goal_time && !(shm_data->is_failed)) {
-            std::this_thread::sleep_for(std::chrono::microseconds(20));
-        }
-
-        shm_data->is_failed = false;
-        putMessage("cost: " + std::to_string(shm_data->cost) + ", gains[0]: " + std::to_string(gains[0]) + ", gains[1]: " + std::to_string(gains[1]));
+        putMessage("time: " + std::to_string(simulator_item_->simulationTime()));
+        putMessage("finished: " + std::to_string(shm_data->is_finished));
+        if (will_reset_simulation) putMessage("will_reset_simulation");
+        putMessage("gains: " + std::to_string(opt_data.gains[0]) + ", " + std::to_string(opt_data.gains[1]));
+        putMessage("cost: " + std::to_string(shm_data->cost));
         return shm_data->cost;
     }
 
@@ -197,6 +207,7 @@ class OptimizeGainPlugin : public Plugin
     {
         double minimum;
         nlopt::result result = opt.optimize(opt_data.gains, minimum);
+        putMessage("result: " + std::to_string(result));
         putMessage("minumum: " + std::to_string(minimum));
         putMessage("gains: " + std::to_string(opt_data.gains[0]) + ", " + std::to_string(opt_data.gains[1]));
     }

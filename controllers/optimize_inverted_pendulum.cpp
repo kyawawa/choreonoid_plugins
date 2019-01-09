@@ -16,11 +16,13 @@
 #include <boost/interprocess/shared_memory_object.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 
+#include <iostream>
+
 using namespace boost::interprocess;
 
 namespace {
 constexpr size_t NUM_PARAMS = 2;
-constexpr double FAIL_PENALTY = 100;
+constexpr double FAIL_PENALTY = 20;
 }
 
 namespace cnoid {
@@ -29,7 +31,7 @@ namespace {
 struct GainWithCost {
     std::vector<double> gains{1.0, 0.0};
     double cost{0};
-    bool is_failed{false};
+    int is_finished{0};
 };
 }
 
@@ -39,6 +41,8 @@ class OptimizeInvertedPendulum : public SimpleController
     LinkPtr rod;
     RateGyroSensorPtr gyro_sensor;
     AccelerationSensorPtr accel_sensor;
+
+    double wheel_q_prev;
 
     GainWithCost opt_data;
     double goal_time;
@@ -61,6 +65,7 @@ class OptimizeInvertedPendulum : public SimpleController
         wheel = io->body()->link("WHEEL");
         wheel->setActuationMode(Link::JOINT_TORQUE);
         io->enableIO(wheel);
+        wheel_q_prev = 0;
         rod = io->body()->link("ROD");
         io->enableInput(rod);
 
@@ -72,12 +77,26 @@ class OptimizeInvertedPendulum : public SimpleController
 
     bool start() override
     {
+        readGain();
+        mapped_region region_gain{shm_gain, read_write};
+        GainWithCost* data = static_cast<GainWithCost*>(region_gain.get_address());
+        data->is_finished = 0;
+
         return true;
     }
 
     bool control() override
     {
+        wheel->dq() = (wheel->q() - wheel_q_prev) / dt;
+        wheel_q_prev = wheel->q();
+        // MessageView::mainInstance()->putln("q: " + std::to_string(wheel->q()));
+        // MessageView::mainInstance()->putln("q_prev: " + std::to_string(wheel_q_prev));
+        // MessageView::mainInstance()->putln("dq: " + std::to_string(wheel->dq()));
+        // std::cerr << "q: " << wheel->q() << ", q_prev: " << wheel_q_prev << ", dq: " << wheel->dq() << std::endl;
+        // std::cerr << "gyro: " << gyro_sensor->w().transpose() << std::endl;
         wheel->u() = gyro_sensor->w().sum() * opt_data.gains[0] + wheel->dq() * opt_data.gains[1];
+        // wheel->u() = gyro_sensor->w().sum() * 1.0 + wheel->dq() * opt_data.gains[1];
+        // wheel->u() = gyro_sensor->w().sum() * 1.0 + wheel->dq() * 1.0;
         writeData();
         ++count;
         return 0;
@@ -85,16 +104,22 @@ class OptimizeInvertedPendulum : public SimpleController
 
     // void setGoalTime(const double _time) { goal_time = _time; }
     // void setGain(const std::vector<double>& _gain) { gains = _gain; }
-    bool calcIsFailed()
+    int calcIsFinished()
     {
-        opt_data.is_failed = (opt_data.is_failed || std::abs(accel_sensor->dv().sum()) > 500.0);
-        return opt_data.is_failed;
+        if (opt_data.is_finished == 0) {
+            if (std::abs(accel_sensor->dv().sum()) > 400.0) {
+                MessageView::mainInstance()->putln("dv: " + std::to_string(accel_sensor->dv().sum()));
+                opt_data.is_finished = -1;
+            }
+            // else if (wheel->dq() + gyro_sensor->w().sum() < 0.01) opt_data.is_finished = 1;
+        }
+        return opt_data.is_finished;
     }
 
     double calcCost() const
     {
-        if (opt_data.is_failed) return count * dt + FAIL_PENALTY;
-        if (count * dt < goal_time) {
+        if (opt_data.is_finished == -1) return count * dt + FAIL_PENALTY;
+        else if (count * dt < goal_time) {
             return count * dt;
         } else {
             return goal_time + wheel->dq() + gyro_sensor->w().sum();
@@ -113,7 +138,7 @@ class OptimizeInvertedPendulum : public SimpleController
     {
         mapped_region region_gain{shm_gain, read_write};
         GainWithCost* data = static_cast<GainWithCost*>(region_gain.get_address());
-        data->is_failed = calcIsFailed();
+        data->is_finished = calcIsFinished();
         data->cost = calcCost();
     }
 };
