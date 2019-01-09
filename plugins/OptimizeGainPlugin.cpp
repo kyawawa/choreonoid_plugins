@@ -102,14 +102,13 @@ class OptimizeGainPlugin : public Plugin
                 if (itemptr) {
                     this->simulator_item_ = itemptr;
                     reset_timer_.sigTimeout().connect([this]() {
-                            mtx.lock();
                             if (will_reset_simulation) {
-                                putMessage("Sig Start");
                                 this->simulator_item_->startSimulation(true);
+                                // addExternalForceToRod(uni_dist(mt));
                                 addExternalForceToRod(uni_dist(mt));
+                                putMessage("Sig Start");
                                 will_reset_simulation = false;
                             }
-                            mtx.unlock();
                         });
                     reset_timer_.setInterval(20); // 20ms
                     sigRequestResetSimulation_.connect([this]() {
@@ -187,7 +186,7 @@ class OptimizeGainPlugin : public Plugin
     void addExternalForceToRod(const double force_x)
     {
         const cnoid::Vector3 force(force_x, 0, 0);
-        simulator_item_->setExternalForce(body_item, body_item->body()->link("ROD"), cnoid::Vector3::Zero(), force, 0.1);
+        simulator_item_->setExternalForce(body_item, body_item->body()->link("ROD"), cnoid::Vector3::Zero(), force, 0.05);
         // body_item->body()->link("ROD")->addExternalForce(force, cnoid::Vector3::Zero());
     }
 
