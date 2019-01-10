@@ -49,7 +49,7 @@ double costFuncWrapper(const std::vector<double> &gains, std::vector<double> &gr
 class OptimizeGainPlugin : public Plugin
 {
     std::mt19937 mt{};
-    std::uniform_real_distribution<double> uni_dist{-40, 40};
+    std::uniform_real_distribution<double> uni_dist{-100, 100};
 
     SimulatorItemPtr simulator_item_;
     double goal_time;
@@ -64,6 +64,7 @@ class OptimizeGainPlugin : public Plugin
     std::thread opt_thread;
 
     cnoid::Timer reset_timer_;
+    cnoid::Timer force_timer_;
     bool will_reset_simulation = false;
     cnoid::Signal<void()> sigRequestResetSimulation_;
 
@@ -87,15 +88,15 @@ class OptimizeGainPlugin : public Plugin
         opt = nlopt::opt(nlopt::GN_ISRES, NUM_PARAMS);
         // opt = nlopt::opt(nlopt::LN_PRAXIS, NUM_PARAMS);
 
-        std::vector<double> lb = {-30, -30};
+        std::vector<double> lb = {-50, -50};
         opt.set_lower_bounds(lb);
-        std::vector<double> ub = {30, 30};
+        std::vector<double> ub = {50, 50};
         opt.set_upper_bounds(ub);
 
-        // opt.set_xtol_rel(1e-10);
-        // opt.set_ftol_abs(1e-10);
+        // opt.set_xtol_rel(1e-5);
+        // opt.set_ftol_rel(1e-5);
         opt.set_min_objective(costFuncWrapper, this);
-        opt.set_stopval(5.0);
+        opt.set_stopval(0.1);
 
         cnoid::RootItem::instance()->sigItemAdded().connect([this](Item* _item) {
                 SimulatorItemPtr itemptr = dynamic_cast<cnoid::SimulatorItem*>(_item);
@@ -104,19 +105,20 @@ class OptimizeGainPlugin : public Plugin
                     reset_timer_.sigTimeout().connect([this]() {
                             if (will_reset_simulation) {
                                 this->simulator_item_->startSimulation(true);
-                                // addExternalForceToRod(uni_dist(mt));
-                                addExternalForceToRod(uni_dist(mt));
-                                putMessage("Sig Start");
                                 will_reset_simulation = false;
                             }
                         });
                     reset_timer_.setInterval(20); // 20ms
                     sigRequestResetSimulation_.connect([this]() {
-                            putMessage("Sig Reset");
                             mtx.lock();
                             will_reset_simulation = true;
                             mtx.unlock();
                         });
+
+                    force_timer_.sigTimeout().connect([this]() {
+                            addExternalForceToRod(uni_dist(mt));
+                        });
+                    force_timer_.setInterval(50);
                 }
             });
 
@@ -134,7 +136,6 @@ class OptimizeGainPlugin : public Plugin
 
                     if (!simulator_item_->isActive()) {
                         SimulationBar::instance()->startSimulation(true);
-                        addExternalForceToRod(uni_dist(mt));
                     }
                     this->reset_timer_.start();
                     opt_thread = std::thread([this]() { this->runNLOPT(); });
@@ -186,7 +187,7 @@ class OptimizeGainPlugin : public Plugin
     void addExternalForceToRod(const double force_x)
     {
         const cnoid::Vector3 force(force_x, 0, 0);
-        simulator_item_->setExternalForce(body_item, body_item->body()->link("ROD"), cnoid::Vector3::Zero(), force, 0.05);
+        simulator_item_->setExternalForce(body_item, body_item->body()->link("ROD"), cnoid::Vector3::Zero(), force, 0.1);
         // body_item->body()->link("ROD")->addExternalForce(force, cnoid::Vector3::Zero());
     }
 
@@ -202,9 +203,9 @@ class OptimizeGainPlugin : public Plugin
             // putMessage("cost: " + std::to_string(shm_data->cost));
             std::this_thread::sleep_for(std::chrono::microseconds(2));
         }
-        putMessage("time: " + std::to_string(simulator_item_->simulationTime()));
-        putMessage("finished: " + std::to_string(shm_data->is_finished));
-        if (will_reset_simulation) putMessage("will_reset_simulation");
+        // putMessage("time: " + std::to_string(simulator_item_->simulationTime()));
+        // putMessage("finished: " + std::to_string(shm_data->is_finished));
+        // if (will_reset_simulation) putMessage("will_reset_simulation");
         putMessage("gains: " + std::to_string(opt_data.gains[0]) + ", " + std::to_string(opt_data.gains[1]));
         putMessage("cost: " + std::to_string(shm_data->cost));
         return shm_data->cost;
