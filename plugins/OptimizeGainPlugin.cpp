@@ -12,11 +12,13 @@
 #include <mutex>
 #include <random>
 #include <iostream>
+#include <fstream>
 
 #include <cnoid/Plugin>
 #include <cnoid/MessageView>
 #include <cnoid/ToolBar>
 #include <cnoid/TimeBar>
+#include <cnoid/SpinBox>
 #include <cnoid/RootItem>
 #include <cnoid/BodyItem>
 #include <cnoid/SimulatorItem>
@@ -35,9 +37,9 @@ using namespace boost::interprocess;
 using namespace cnoid;
 
 namespace {
-constexpr size_t NUM_PARAMS = 2;
+constexpr size_t NUM_PARAMS = 3;
 struct GainWithCost {
-    std::vector<double> gains{1.0, 0.0};
+    std::vector<double> gains{1.0, 1.0, 1.0};
     double cost{0};
     int is_finished{0};
 };
@@ -49,10 +51,12 @@ double costFuncWrapper(const std::vector<double> &gains, std::vector<double> &gr
 class OptimizeGainPlugin : public Plugin
 {
     std::mt19937 mt{};
-    std::uniform_real_distribution<double> uni_dist{-100, 100};
+    std::uniform_real_distribution<double> uni_dist{-10, 10};
+
+    double goal_time;
+    double stop_threshold;
 
     SimulatorItemPtr simulator_item_;
-    double goal_time;
     BodyItemPtr body_item;
 
     const char* GAIN_SHM = "Gain";
@@ -67,6 +71,8 @@ class OptimizeGainPlugin : public Plugin
     cnoid::Timer force_timer_;
     bool will_reset_simulation = false;
     cnoid::Signal<void()> sigRequestResetSimulation_;
+
+    std::ofstream outputfile{"cost.txt"};
 
   public:
     OptimizeGainPlugin() : Plugin("OptimizeGain")
@@ -85,18 +91,19 @@ class OptimizeGainPlugin : public Plugin
         std::memcpy(shm_data, &opt_data, sizeof(opt_data));
 
         goal_time = 10.0;
+        stop_threshold = 0.5;
         opt = nlopt::opt(nlopt::GN_ISRES, NUM_PARAMS);
         // opt = nlopt::opt(nlopt::LN_PRAXIS, NUM_PARAMS);
 
-        std::vector<double> lb = {-50, -50};
+        std::vector<double> lb(NUM_PARAMS, -100);
         opt.set_lower_bounds(lb);
-        std::vector<double> ub = {50, 50};
+        std::vector<double> ub(NUM_PARAMS, 100);
         opt.set_upper_bounds(ub);
 
         // opt.set_xtol_rel(1e-5);
         // opt.set_ftol_rel(1e-5);
-        opt.set_min_objective(costFuncWrapper, this);
-        opt.set_stopval(0.1);
+        opt.set_max_objective(costFuncWrapper, this);
+        opt.set_stopval(goal_time - stop_threshold);
 
         cnoid::RootItem::instance()->sigItemAdded().connect([this](Item* _item) {
                 SimulatorItemPtr itemptr = dynamic_cast<cnoid::SimulatorItem*>(_item);
@@ -138,6 +145,7 @@ class OptimizeGainPlugin : public Plugin
                         SimulationBar::instance()->startSimulation(true);
                     }
                     this->reset_timer_.start();
+                    this->force_timer_.start();
                     opt_thread = std::thread([this]() { this->runNLOPT(); });
                     // if (!simulator_item_->isActive()) SimulationBar::instance()->startSimulation(true);
                     //     if (findControllerItem()) {
@@ -152,9 +160,44 @@ class OptimizeGainPlugin : public Plugin
                     // }
                 } else {
                     this->reset_timer_.stop();
+                    this->force_timer_.stop();
                     if (opt_thread.joinable()) opt_thread.detach();
                 }
             });
+
+        {
+            std::unique_ptr<SpinBox> timeSpin = std::make_unique<SpinBox>();
+            timeSpin->setMaximum(1000);
+            timeSpin->setValue(goal_time);
+            timeSpin->sigValueChanged().connect([this](const int value) {
+                    this->goal_time = value;
+                    opt.set_stopval(this->goal_time - stop_threshold);
+                });
+            bar->addWidget(new QLabel("GoalTime"));
+            bar->addWidget(timeSpin.release());
+        }
+        {
+            std::unique_ptr<SpinBox> distSpin = std::make_unique<SpinBox>();
+            distSpin->setMaximum(10000);
+            distSpin->setValue(10);
+            distSpin->sigValueChanged().connect([this](const int value) {
+                    uni_dist = std::uniform_real_distribution<double>(-value, value);
+                });
+            bar->addWidget(new QLabel("Disturbance"));
+            bar->addWidget(distSpin.release());
+        }
+        {
+            std::unique_ptr<DoubleSpinBox> threSpin = std::make_unique<DoubleSpinBox>();
+            threSpin->setMaximum(1000);
+            threSpin->setValue(stop_threshold);
+            threSpin->sigValueChanged().connect([this](const double value) {
+                    this->stop_threshold = value;
+                    this->opt.set_stopval(this->goal_time - stop_threshold);
+                });
+            bar->addWidget(new QLabel("StopThre"));
+            bar->addWidget(threSpin.release());
+        }
+
         // button->sigToggled().connect([this](bool checked) {
         //         if (checked) {
         //             SimpleControllerItemPtr controller_item = ItemTreeView::instance()->selectedItem<SimpleControllerItem>();
@@ -179,23 +222,26 @@ class OptimizeGainPlugin : public Plugin
     {
         shm_gain.remove(GAIN_SHM);
         opt_thread.detach();
+        outputfile.close();
+
         return true;
     }
 
     cnoid::SignalProxy<void()> sigRequestResetSimulation() { return sigRequestResetSimulation_; }
 
-    void addExternalForceToRod(const double force_x)
+    void addExternalForceToRod(const double force_x, const double time = 0.1)
     {
         const cnoid::Vector3 force(force_x, 0, 0);
-        simulator_item_->setExternalForce(body_item, body_item->body()->link("ROD"), cnoid::Vector3::Zero(), force, 0.1);
+        simulator_item_->setExternalForce(body_item, body_item->body()->link("ROD"), cnoid::Vector3::Zero(), force, time);
         // body_item->body()->link("ROD")->addExternalForce(force, cnoid::Vector3::Zero());
     }
 
     double costFunc(const std::vector<double> &gains, std::vector<double> &grad, void *data)
     {
         GainWithCost* shm_data = static_cast<GainWithCost*>(region_gain.get_address());
-        shm_data->gains[0] = gains[0];
-        shm_data->gains[1] = gains[1];
+        for (size_t i = 0; i < gains.size(); ++i) {
+            shm_data->gains[i] = gains[i];
+        }
         shm_data->is_finished = 0;
         sigRequestResetSimulation_();
 
@@ -206,8 +252,9 @@ class OptimizeGainPlugin : public Plugin
         // putMessage("time: " + std::to_string(simulator_item_->simulationTime()));
         // putMessage("finished: " + std::to_string(shm_data->is_finished));
         // if (will_reset_simulation) putMessage("will_reset_simulation");
-        putMessage("gains: " + std::to_string(opt_data.gains[0]) + ", " + std::to_string(opt_data.gains[1]));
+        putMessage("gains: " + std::to_string(opt_data.gains[0]) + ", " + std::to_string(opt_data.gains[1]) + ", " + std::to_string(opt_data.gains[2]));
         putMessage("cost: " + std::to_string(shm_data->cost));
+        outputfile << shm_data->cost << " ";
         return shm_data->cost;
     }
 
@@ -222,9 +269,16 @@ class OptimizeGainPlugin : public Plugin
     {
         double minimum;
         nlopt::result result = opt.optimize(opt_data.gains, minimum);
-        putMessage("result: " + std::to_string(result));
-        putMessage("minumum: " + std::to_string(minimum));
-        putMessage("gains: " + std::to_string(opt_data.gains[0]) + ", " + std::to_string(opt_data.gains[1]));
+        // putMessage("result: " + std::to_string(result));
+        // putMessage("minumum: " + std::to_string(minimum));
+        // putMessage("gains: " + std::to_string(opt_data.gains[0]) + ", " + std::to_string(opt_data.gains[1]) + ", " + std::to_string(opt_data.gains[2]));
+        std::cerr << "NLOPT finished" << std::endl;
+        std::cerr << "result: " << result << std::endl;
+        std::cerr << "minimized cost: " << minimum << std::endl;
+        std::cerr << "gains: ";
+        for (const auto gain : opt_data.gains) std::cerr << gain << ", ";
+        std::cerr << std::endl;
+        outputfile.flush();
     }
 };
 
