@@ -25,6 +25,7 @@ constexpr size_t NUM_PARAMS = 3;
 constexpr double FAIL_PENALTY = 30;
 constexpr double NAN_PENALTY = 100;
 constexpr double FAIL_ANGLE = 1.2;
+constexpr double WHEEL_RADIUS = 0.2;
 struct GainWithCost {
     std::vector<double> gains{1.0, 1.0, 1.0};
     double cost{0};
@@ -117,7 +118,7 @@ class OptimizeInvertedPendulum : public SimpleController
             wheel_q_prev = wheel->q();
             gyro_prev = gyro_w;
 
-            wheel->u() = gyro_acc * opt_data.gains[0] + rod_rot.sum() * opt_data.gains[1] + (init_rod.translation() - rod->translation()).sum() * opt_data.gains[2];
+            wheel->u() = gyro_acc * opt_data.gains[0] + rod_rot.sum() * opt_data.gains[1] + wheel->q() * opt_data.gains[2];
             ++count;
         }
 
@@ -133,12 +134,17 @@ class OptimizeInvertedPendulum : public SimpleController
         return opt_data.is_finished;
     }
 
+    /// Maximize cost
+    /// If failed:
+    ///     If body has NaN: cost = current time - (fail penalty + NaN penalty)
+    ///     else:            cost = current time - fail penalty
+    /// else:                cost = current time - (wheel velocity + sum of gyro + displacement from initial position)
     double calcCost() const
     {
         if (opt_data.is_finished == -1) {
             if (rod->rotation().array().isNaN().any()) return count * dt - (FAIL_PENALTY + NAN_PENALTY);
             return count * dt - FAIL_PENALTY;
-        } else return count * dt - (std::abs(wheel->dq()) + gyro_w.cwiseAbs().sum() + (init_rod.translation() - rod->translation()).cwiseAbs().sum());
+        } else return count * dt - (std::abs(wheel->dq()) + gyro_w.cwiseAbs().sum() + std::abs(wheel->q() * WHEEL_RADIUS));
     }
 };
 
