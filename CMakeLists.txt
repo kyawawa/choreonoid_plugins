@@ -1,21 +1,21 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(choreonoid_plugins)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 find_package(catkin COMPONENTS
   hrpsys_choreonoid_tutorials
   hrpsys_ros_bridge_tutorials
   jvrc_models
   jsk_models
+  nlopt
   )
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-include(FindPkgConfig)
-pkg_check_modules(cnoid-plugin REQUIRED choreonoid-body-plugin)
-pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
-pkg_check_modules(NLOPT REQUIRED nlopt)
 
 catkin_package(
   DEPENDS
@@ -24,8 +24,16 @@ catkin_package(
   LIBRARIES # TODO
 )
 
-include_directories(${cnoid-plugin_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} ${YAML_CPP_INCLUDEDIR} ${NLOPT_INCLUDE_DIRS})
-link_directories(${cnoid-plugin_LIBRARY_DIRS} ${catkin_LIBRARY_DIRS} ${NLOPT_LIBRARY_DIRS})
+include(FindPkgConfig)
+pkg_check_modules(cnoid-plugin REQUIRED choreonoid-body-plugin)
+pkg_check_modules(YAML_CPP REQUIRED yaml-cpp)
+pkg_check_modules(NLOPT QUIET nlopt)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+include_directories(${cnoid-plugin_INCLUDE_DIRS} ${YAML_CPP_INCLUDEDIR} ${NLOPT_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
+link_directories(${cnoid-plugin_LIBRARY_DIRS} ${NLOPT_LIBRARY_DIRS} ${catkin_LIBRARY_DIRS})
 
 ### Customizer ###
 set(target CnoidTrampolineCustomizer)
@@ -42,7 +50,6 @@ set(target CnoidPDController)
 add_library(${target} SHARED controllers/PDController.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
 set_target_properties(${target} PROPERTIES
-  COMPILE_FLAG "-fPIC"
   PREFIX "lib"
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
@@ -51,7 +58,6 @@ set(target CnoidSpringFootController)
 add_library(${target} SHARED controllers/SpringFootController.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
 set_target_properties(${target} PROPERTIES
-  COMPILE_FLAG "-fPIC"
   PREFIX "lib"
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
@@ -60,7 +66,14 @@ set(target CnoidPDController_InvertedPendulum)
 add_library(${target} SHARED controllers/PDController_InvertedPendulum.cpp)
 target_link_libraries(${target} ${cnoid-plugin_LIBRARIES} rt)
 set_target_properties(${target} PROPERTIES
-  COMPILE_FLAG "-fPIC"
+  PREFIX "lib"
+  SUFFIX ".so"
+  LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
+
+set(target CnoidOptimizeInvertedPendulum)
+add_library(${target} SHARED controllers/optimize_inverted_pendulum.cpp)
+target_link_libraries(${target} ${cnoid-plugin_LIBRARIES})
+set_target_properties(${target} PROPERTIES
   PREFIX "lib"
   SUFFIX ".so"
   LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
@@ -76,7 +89,7 @@ set_target_properties(${target} PROPERTIES
 
 set(target CnoidOptimizeGainPlugin)
 add_library(${target} SHARED plugins/OptimizeGainPlugin.cpp)
-target_link_libraries(${target} ${cnoid-plugin_LIBRARIES} ${NLOPT_LIBRARIES} rt)
+target_link_libraries(${target} ${cnoid-plugin_LIBRARIES} ${NLOPT_LIBRARIES} CnoidOptimizeInvertedPendulum Threads::Threads)
 set_target_properties(${target} PROPERTIES
   PREFIX "lib"
   SUFFIX ".so"
