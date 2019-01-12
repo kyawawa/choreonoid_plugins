@@ -23,6 +23,7 @@ using namespace boost::interprocess;
 namespace {
 constexpr size_t NUM_PARAMS = 3;
 constexpr double FAIL_PENALTY = 30;
+constexpr double NAN_PENALTY = 100;
 constexpr double FAIL_ANGLE = 1.2;
 struct GainWithCost {
     std::vector<double> gains{1.0, 1.0, 1.0};
@@ -45,7 +46,6 @@ class OptimizeInvertedPendulum : public SimpleController
     cnoid::Vector3 gyro_w;
     double gyro_acc;
     cnoid::Position init_rod;
-    // cnoid::Matrix3 init_rod_rot;
     cnoid::Vector3 rod_rot;
 
     GainWithCost opt_data;
@@ -58,15 +58,16 @@ class OptimizeInvertedPendulum : public SimpleController
   public:
     bool initialize(SimpleControllerIO* io) override
     {
-        io->body()->initializeDeviceStates();
-
         shm_gain = shared_memory_object{open_only, GAIN_SHM, read_write};
-        mapped_region region_gain{shm_gain, read_write};
-        GainWithCost* data = static_cast<GainWithCost*>(region_gain.get_address());
-        for (size_t i = 0; i < opt_data.gains.size(); ++i) {
-            opt_data.gains[i] = data->gains[i];
+
+        {
+            mapped_region region_gain{shm_gain, read_write};
+            GainWithCost* data = static_cast<GainWithCost*>(region_gain.get_address());
+            for (size_t i = 0; i < opt_data.gains.size(); ++i) {
+                opt_data.gains[i] = data->gains[i];
+            }
+            data->is_finished = 0;
         }
-        data->is_finished = 0;
 
         count = 0;
         dt = io->timeStep();
@@ -102,24 +103,21 @@ class OptimizeInvertedPendulum : public SimpleController
     {
         if (opt_data.is_finished == 0) {
             gyro_w = gyro_sensor->w();
-            // std::cerr << "gyro: " << gyro_sensor->w().transpose() << std::endl;
             wheel->dq() = (wheel->q() - wheel_q_prev) / dt;
-            // std::cerr << "q: " << wheel->q() << ", q_prev: " << wheel_q_prev << ", dq: " << wheel->dq() << std::endl;
-            // std::cerr << "gyro: " << gyro_sensor->w().transpose() << std::endl;
-            // std::cerr << Eigen::AngleAxisd(init_rod.transpose() * rod->rotation()).angle() << std::endl;
-            // std::cerr << rod->p().transpose() << std::endl;
-            // wheel->u() = gyro_sensor->w().sum() * opt_data.gains[0] + wheel->dq() * opt_data.gains[1];
-            // wheel->u() = gyro_sensor->w().sum() * 1.0 + wheel->dq() * opt_data.gains[1];
-            // wheel->u() = gyro_sensor->w().sum() * 1.0 + wheel->dq() * 1.0;
 
-            writeData();
+            {
+                mapped_region region_gain{shm_gain, read_write};
+                GainWithCost* data = static_cast<GainWithCost*>(region_gain.get_address());
+
+                data->is_finished = calcIsFinished();
+                data->cost = calcCost();
+            }
 
             rod_rot += (gyro_w + gyro_prev) * 0.5 * dt;
             wheel_q_prev = wheel->q();
             gyro_prev = gyro_w;
 
             wheel->u() = gyro_acc * opt_data.gains[0] + rod_rot.sum() * opt_data.gains[1] + (init_rod.translation() - rod->translation()).sum() * opt_data.gains[2];
-            // wheel->u() = 0;
             ++count;
         }
 
@@ -128,48 +126,19 @@ class OptimizeInvertedPendulum : public SimpleController
 
     int calcIsFinished()
     {
-        // if (std::abs(accel_sensor->dv().sum()) > 400.0) {
-        // std::cerr << std::abs(((gyro_sensor->w() - gyro_prev) / dt).sum()) << std::endl;
-        // std::cerr << gyro_sensor->w().transpose() << std::endl;
         gyro_acc = (gyro_w - gyro_prev).sum() / dt;
-        // std::cerr << Eigen::AngleAxisd(init_rod.transpose() * rod->rotation()).angle() << std::endl;
-        // std::cerr << rod->rotation() << std::endl;
-        // std::cerr << "acc:  " << gyro_acc << std::endl;
         if (Eigen::AngleAxisd(init_rod.linear().transpose() * rod->rotation()).angle() > FAIL_ANGLE || rod->rotation().array().isNaN().any()) {
-            // std::cerr << "gyro: " << gyro_sensor->w().transpose() << std::endl;
-            // std::cerr << "prev: " << gyro_prev.transpose() << std::endl;
-            // std::cerr << "acc:  " << gyro_acc << std::endl;
             opt_data.is_finished = -1;
         }
-        // else if (wheel->dq() + gyro_sensor->w().sum() < 0.01) opt_data.is_finished = 1;
         return opt_data.is_finished;
     }
 
     double calcCost() const
     {
         if (opt_data.is_finished == -1) {
-            if (rod->rotation().array().isNaN().any()) return count * dt - FAIL_PENALTY - 100;
+            if (rod->rotation().array().isNaN().any()) return count * dt - (FAIL_PENALTY + NAN_PENALTY);
             return count * dt - FAIL_PENALTY;
         } else return count * dt - (std::abs(wheel->dq()) + gyro_w.cwiseAbs().sum() + (init_rod.translation() - rod->translation()).cwiseAbs().sum());
-    }
-
-    void readGain()
-    {
-        mapped_region region_gain{shm_gain, read_only};
-        GainWithCost* data = static_cast<GainWithCost*>(region_gain.get_address());
-        for (size_t i = 0; i < opt_data.gains.size(); ++i) {
-            opt_data.gains[i] = data->gains[i];
-        }
-    }
-
-    void writeData()
-    {
-        mapped_region region_gain{shm_gain, read_write};
-        GainWithCost* data = static_cast<GainWithCost*>(region_gain.get_address());
-
-        int tmp_is_finished = calcIsFinished();
-        data->cost = calcCost();
-        data->is_finished = tmp_is_finished;
     }
 };
 
