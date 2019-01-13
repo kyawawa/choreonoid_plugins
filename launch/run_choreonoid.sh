@@ -20,7 +20,10 @@ export CUSTOMIZER_CONF_PATH=$(rospack find choreonoid_plugins)/config/trampoline
 if [ -z "$cnoid_proj" ]; then
     (cd /tmp; $choreonoid_exe)
 else
-    (cd /tmp; $choreonoid_exe $cnoid_proj)
-    ## for using gdb
-    # (cd /tmp; gdb -ex run --args $choreonoid_exe $cnoid_proj)
+    if [ "$2" = "gdb" ];then
+        # gdb -ex run --args $choreonoid_exe $cnoid_proj
+        gdb --args $choreonoid_exe $cnoid_proj
+    else
+        $choreonoid_exe $cnoid_proj
+    fi
 fi

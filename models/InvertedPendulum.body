@@ -10,7 +10,7 @@ links:
     rotation: [ 1, 0, 0, 90 ]
     jointType: free
     elements:
-      - 
+      -
         type: RigidBody
         centerOfMass: [ 0, 0, 0 ]
         mass: 3.0
@@ -47,7 +47,7 @@ links:
     maxJointVelocity: 90
     jointId: 0
     elements:
-      - 
+      -
         type: RigidBody
         centerOfMass: [ 0, 0, 0 ]
         mass: 3.0
@@ -62,18 +62,18 @@ links:
               height: 0.1
               radius: 0.2
             appearance: *BodyAppearance
-      - 
+      -
         # Mark
         type: Transform
         translation: [ 0, 0, -0.15 ]
         elements:
           RigidBody:
             centerOfMass: [ 0, 0, 0 ]
-            mass: 0
+            mass: 0.2
             inertia: [
-              0, 0, 0,
-              0, 0, 0,
-              0, 0, 0 ]
+              0.1, 0, 0,
+              0, 0.1, 0,
+              0, 0, 0.1 ]
             elements:
               Shape:
                 geometry:
