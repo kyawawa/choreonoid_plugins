@@ -190,7 +190,7 @@ class OptimizeGainPlugin : public Plugin
     bool finalize() override
     {
         shm_gain.remove(GAIN_SHM);
-        opt_thread.detach();
+        if (opt_thread.joinable()) opt_thread.detach();
         outputfile.close();
 
         return true;
